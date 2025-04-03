@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, UserCircle, LogIn } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +11,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <nav className="w-full bg-black/90 backdrop-blur-sm fixed top-0 z-50 shadow-sm">
       <div className="container mx-auto flex items-center justify-between py-4">
         <div className="flex items-center">
-          <a href="/" className="text-2xl font-bold text-white">Wealth<span className="text-gold-500">Pathway</span></a>
+          <Link to="/" className="text-2xl font-bold text-white">Markets<span className="text-gold-500">4all</span></Link>
         </div>
         
         <div className="hidden md:flex items-center space-x-8">
@@ -40,10 +43,60 @@ const Navbar = () => {
           <a href="#contact" className="text-white hover:text-gold-500 font-medium">Contact</a>
         </div>
         
-        <div>
-          <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">Începe acum</Button>
+        <div className="hidden md:flex items-center space-x-4">
+          <Link to="/login">
+            <Button variant="outline" className="border-gold-500 text-white hover:bg-gold-500/10">
+              <LogIn className="mr-2 h-4 w-4" />
+              Autentificare
+            </Button>
+          </Link>
+          <Link to="/register">
+            <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
+              <UserCircle className="mr-2 h-4 w-4" />
+              Înregistrare
+            </Button>
+          </Link>
+        </div>
+
+        {/* Mobile menu button */}
+        <div className="md:hidden flex items-center">
+          <Button 
+            variant="ghost" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-white hover:bg-transparent hover:text-gold-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+            </svg>
+          </Button>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-black/95 p-4">
+          <div className="flex flex-col space-y-4">
+            <a href="#services" className="text-white hover:text-gold-500 font-medium py-2">Servicii</a>
+            <a href="#companies" className="text-white hover:text-gold-500 font-medium py-2">Companii</a>
+            <a href="#about" className="text-white hover:text-gold-500 font-medium py-2">Despre noi</a>
+            <a href="#contact" className="text-white hover:text-gold-500 font-medium py-2">Contact</a>
+            <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
+              <Link to="/login">
+                <Button variant="outline" className="w-full border-gold-500 text-white">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Autentificare
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button className="w-full bg-gold-500 text-black">
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  Înregistrare
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

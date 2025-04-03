@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -8,9 +9,9 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">Wealth<span className="text-gold-500">Pathway</span></h3>
+            <h3 className="text-xl font-bold mb-4">Markets<span className="text-gold-500">4all</span></h3>
             <p className="text-gray-400 mb-4">
-              Conectăm investitorii cu partenerii financiari potriviți pentru construirea sustenabilă a averii.
+              Promovăm educația financiară și o nouă viziune asupra banilor. Fiecare persoană merită să învețe cum să investească, indiferent de buget.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-gold-500">
@@ -38,10 +39,10 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4 text-white">Servicii</h3>
             <ul className="space-y-2">
               <li><a href="#services" className="text-gray-400 hover:text-gold-500">Opțiuni de Investiții</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-gold-500">Planificare Pensie</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-gold-500">Strategie Fiscală</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-gold-500">Planificare Succesorală</a></li>
               <li><a href="#" className="text-gray-400 hover:text-gold-500">Educație Financiară</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-gold-500">Consultanță Personalizată</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-gold-500">Planificare Portofoliu</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-gold-500">Analize de Piață</a></li>
             </ul>
           </div>
           
@@ -56,12 +57,12 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-white">Contact</h3>
+            <h3 className="text-lg font-semibold mb-4 text-white">Cont</h3>
             <ul className="space-y-2">
-              <li className="text-gray-400">Str. Financiară 123</li>
-              <li className="text-gray-400">București, România</li>
-              <li className="text-gray-400">info@wealthpathway.ro</li>
-              <li className="text-gray-400">(021) 123-4567</li>
+              <li><Link to="/login" className="text-gray-400 hover:text-gold-500">Autentificare</Link></li>
+              <li><Link to="/register" className="text-gray-400 hover:text-gold-500">Înregistrare</Link></li>
+              <li><a href="#" className="text-gray-400 hover:text-gold-500">Profil Personal</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-gold-500">Asistență</a></li>
             </ul>
           </div>
         </div>
@@ -69,7 +70,7 @@ const Footer = () => {
         <Separator className="bg-gray-800 my-8" />
         
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm">&copy; 2025 WealthPathway. Toate drepturile rezervate.</p>
+          <p className="text-gray-500 text-sm">&copy; 2025 Markets4all. Toate drepturile rezervate.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-500 hover:text-gold-500 text-sm">Politică de confidențialitate</a>
             <a href="#" className="text-gray-500 hover:text-gold-500 text-sm">Termeni și condiții</a>

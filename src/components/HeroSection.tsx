@@ -1,27 +1,57 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
+  const [investmentAmount, setInvestmentAmount] = useState('10.000');
+  const [monthlyContribution, setMonthlyContribution] = useState('500');
+  const [period, setPeriod] = useState('10');
+  const [result, setResult] = useState('110.000+');
+
+  const calculateInvestment = () => {
+    const initial = parseFloat(investmentAmount.replace(/\./g, '').replace(',', '.'));
+    const monthly = parseFloat(monthlyContribution.replace(/\./g, '').replace(',', '.'));
+    const years = parseInt(period);
+    
+    if (isNaN(initial) || isNaN(monthly) || isNaN(years)) {
+      return;
+    }
+    
+    // Formulă simplă de calcul compus cu dobândă de 8% anual
+    const annualRate = 0.08;
+    let totalAmount = initial;
+    
+    for (let i = 0; i < years * 12; i++) {
+      totalAmount = totalAmount * (1 + annualRate / 12) + monthly;
+    }
+    
+    setResult(Math.round(totalAmount).toLocaleString('ro-RO') + ' lei');
+  };
+
   return (
     <section className="bg-black text-white pt-28 pb-20">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-10 md:mb-0 animate-fade-in">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Găsește calea perfectă pentru investițiile tale
+              Investiții pentru <span className="text-gold-500">fiecare</span>, indiferent de buget
             </h1>
             <p className="text-lg md:text-xl mb-8 text-gray-300 max-w-xl">
-              Te conectăm cu partenerii de investiții potriviți, în funcție de obiectivele, experiența și resursele tale. Începe să-ți construiești averea astăzi.
+              Markets4all promovează educația financiară și o nouă viziune asupra banilor. Te ajutăm să începi să investești corect, fie că ai 50 de lei sau 50.000.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-                Explorează opțiunile <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                Află mai multe
-              </Button>
+              <Link to="/register">
+                <Button size="lg" className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
+                  Începe să investești <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <a href="#services">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                  Descoperă serviciile <Info className="ml-2 h-5 w-5" />
+                </Button>
+              </a>
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center animate-slide-up">
@@ -35,19 +65,41 @@ const HeroSection = () => {
                 </div>
                 <div className="space-y-4 text-white">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Investiție inițială</label>
-                    <div className="border border-gray-700 rounded-md px-4 py-2 bg-gray-800">10.000 lei</div>
+                    <label className="block text-sm font-medium mb-1">Investiție inițială (lei)</label>
+                    <input 
+                      type="text" 
+                      value={investmentAmount} 
+                      onChange={(e) => setInvestmentAmount(e.target.value)} 
+                      className="w-full border border-gray-700 rounded-md px-4 py-2 bg-gray-800"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Contribuție lunară</label>
-                    <div className="border border-gray-700 rounded-md px-4 py-2 bg-gray-800">500 lei</div>
+                    <label className="block text-sm font-medium mb-1">Contribuție lunară (lei)</label>
+                    <input 
+                      type="text" 
+                      value={monthlyContribution} 
+                      onChange={(e) => setMonthlyContribution(e.target.value)}
+                      className="w-full border border-gray-700 rounded-md px-4 py-2 bg-gray-800"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Perioadă de timp (ani)</label>
-                    <div className="border border-gray-700 rounded-md px-4 py-2 bg-gray-800">10</div>
+                    <input 
+                      type="text" 
+                      value={period} 
+                      onChange={(e) => setPeriod(e.target.value)}
+                      className="w-full border border-gray-700 rounded-md px-4 py-2 bg-gray-800"
+                    />
                   </div>
-                  <Button className="w-full bg-gold-500 hover:bg-gold-600 text-black">Calculează</Button>
-                  <p className="text-sm text-gray-300 text-center mt-2">Creștere potențială: <span className="font-bold text-gold-500">110.000+ lei</span></p>
+                  <Button 
+                    className="w-full bg-gold-500 hover:bg-gold-600 text-black"
+                    onClick={calculateInvestment}
+                  >
+                    Calculează
+                  </Button>
+                  <p className="text-sm text-gray-300 text-center mt-2">
+                    Creștere potențială: <span className="font-bold text-gold-500">{result} lei</span>
+                  </p>
                 </div>
               </div>
             </div>
