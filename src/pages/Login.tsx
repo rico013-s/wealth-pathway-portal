@@ -1,15 +1,36 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // În mod normal, aici ar fi logica de autentificare
+    // Pentru demonstrație, vom redirecționa direct către dashboard
+    
+    toast({
+      title: "Autentificare reușită",
+      description: "Bine ai revenit la Markets4all!",
+      variant: "default",
+    });
+    
+    navigate('/dashboard');
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -26,7 +47,7 @@ const Login = () => {
                 <p className="text-gray-400">Intră în contul tău Markets4all</p>
               </div>
               
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
@@ -34,7 +55,9 @@ const Login = () => {
                       id="email" 
                       type="email" 
                       placeholder="nume@exemplu.com"
-                      className="pl-10 bg-gray-800 border-gray-700 text-white" 
+                      className="pl-10 bg-gray-800 border-gray-700 text-white"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
@@ -53,6 +76,8 @@ const Login = () => {
                       type="password" 
                       placeholder="••••••••" 
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
