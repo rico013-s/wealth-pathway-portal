@@ -9,100 +9,100 @@ const companies = [
   {
     name: "GlobalWealth Partners",
     logo: "GW",
-    description: "A leader in global market investments with 25+ years of experience and over $10B in managed assets.",
+    description: "Lider în investiții pe piețele globale cu peste 25 de ani de experiență și peste 10 miliarde de active administrate.",
     rating: 4.8,
     reviewCount: 1250,
-    specialties: ["Stocks", "ETFs", "Bonds"],
-    minInvestment: "$500",
-    returnRate: "12-15% avg",
+    specialties: ["Acțiuni", "ETF-uri", "Obligațiuni"],
+    minInvestment: "500 lei",
+    returnRate: "12-15% în medie",
     highlighted: true,
   },
   {
     name: "Frontier Investments",
     logo: "FI",
-    description: "Specializing in emerging markets and technological innovation investments for forward-thinking clients.",
+    description: "Specializați în investiții pe piețe emergente și inovații tehnologice pentru clienți orientați spre viitor.",
     rating: 4.6,
     reviewCount: 890,
-    specialties: ["Tech Stocks", "Emerging Markets", "IPOs"],
-    minInvestment: "$1,000",
-    returnRate: "15-20% avg",
+    specialties: ["Acțiuni tech", "Piețe emergente", "IPO-uri"],
+    minInvestment: "1.000 lei",
+    returnRate: "15-20% în medie",
     highlighted: false,
   },
   {
     name: "Heritage Financial",
     logo: "HF",
-    description: "Conservative investment strategies focused on stable growth and capital preservation.",
+    description: "Strategii de investiții conservatoare axate pe creștere stabilă și conservarea capitalului.",
     rating: 4.7,
     reviewCount: 1560,
-    specialties: ["Dividend Stocks", "Mutual Funds", "Retirement"],
-    minInvestment: "$100",
-    returnRate: "8-10% avg",
+    specialties: ["Acțiuni cu dividende", "Fonduri mutuale", "Pensii"],
+    minInvestment: "100 lei",
+    returnRate: "8-10% în medie",
     highlighted: false,
   },
   {
     name: "Apex Capital Management",
     logo: "AC",
-    description: "High-performance investment strategies targeting ambitious returns for experienced investors.",
+    description: "Strategii de investiții de înaltă performanță care vizează randamente ambițioase pentru investitorii experimentați.",
     rating: 4.5,
     reviewCount: 720,
-    specialties: ["Hedge Funds", "Private Equity", "Commodities"],
-    minInvestment: "$10,000",
-    returnRate: "18-22% avg",
+    specialties: ["Fonduri speculative", "Private Equity", "Mărfuri"],
+    minInvestment: "10.000 lei",
+    returnRate: "18-22% în medie",
     highlighted: false,
   }
 ];
 
 const CompaniesSection = () => {
   return (
-    <section id="companies" className="py-20">
+    <section id="companies" className="py-20 bg-black">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gradient">Our Partner Companies</h2>
-          <p className="text-lg text-navy-600">
-            We've partnered with industry-leading investment firms to provide you with a diverse range of options.
-            Each partner is carefully vetted for performance, reliability, and client satisfaction.
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gold-500">Companiile Noastre Partenere</h2>
+          <p className="text-lg text-gray-300">
+            Am dezvoltat parteneriate cu firme de investiții de top pentru a-ți oferi o gamă diversă de opțiuni.
+            Fiecare partener este verificat cu atenție pentru performanță, fiabilitate și satisfacția clienților.
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {companies.map((company, index) => (
-            <Card key={index} className={`card-hover ${company.highlighted ? 'border-2 border-gold-500 shadow-md' : ''}`}>
+            <Card key={index} className={`bg-gray-900 border border-gray-800 hover:border-gold-500 transition-all duration-300 ${company.highlighted ? 'border-2 border-gold-500 shadow-md' : ''}`}>
               <CardHeader className="relative">
                 {company.highlighted && (
-                  <Badge className="absolute -top-3 right-0 bg-gold-500 text-navy-900">Top Pick</Badge>
+                  <Badge className="absolute -top-3 right-0 bg-gold-500 text-black">Top Pick</Badge>
                 )}
                 <div className="flex items-center justify-between">
-                  <div className="w-14 h-14 rounded-full bg-navy-700 flex items-center justify-center text-white text-xl font-bold">
+                  <div className="w-14 h-14 rounded-full bg-black flex items-center justify-center text-white text-xl font-bold border border-gold-500">
                     {company.logo}
                   </div>
                   <div className="flex items-center">
                     <Star className="h-5 w-5 fill-gold-500 text-gold-500 mr-1" />
-                    <span className="font-medium">{company.rating}</span>
-                    <span className="text-sm text-gray-500 ml-1">({company.reviewCount})</span>
+                    <span className="font-medium text-white">{company.rating}</span>
+                    <span className="text-sm text-gray-400 ml-1">({company.reviewCount})</span>
                   </div>
                 </div>
-                <CardTitle className="text-xl font-bold text-navy-800">{company.name}</CardTitle>
+                <CardTitle className="text-xl font-bold text-white">{company.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-navy-600 mb-4">{company.description}</CardDescription>
+                <CardDescription className="text-gray-300 mb-4">{company.description}</CardDescription>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {company.specialties.map((specialty, i) => (
-                    <Badge key={i} variant="outline" className="bg-navy-50">{specialty}</Badge>
+                    <Badge key={i} variant="outline" className="bg-gray-800 text-white border-gray-700">{specialty}</Badge>
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-gray-50 p-2 rounded">
-                    <p className="text-gray-500">Min Investment</p>
-                    <p className="font-medium text-navy-800">{company.minInvestment}</p>
+                  <div className="bg-gray-800 p-2 rounded">
+                    <p className="text-gray-400">Investiție minimă</p>
+                    <p className="font-medium text-white">{company.minInvestment}</p>
                   </div>
-                  <div className="bg-gray-50 p-2 rounded">
-                    <p className="text-gray-500">Return Rate</p>
-                    <p className="font-medium text-forest-700">{company.returnRate}</p>
+                  <div className="bg-gray-800 p-2 rounded">
+                    <p className="text-gray-400">Rata de returnare</p>
+                    <p className="font-medium text-gold-500">{company.returnRate}</p>
                   </div>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full bg-navy-700 hover:bg-navy-800 text-white">View Details</Button>
+                <Button className="w-full bg-gold-500 hover:bg-gold-600 text-black">Vezi detalii</Button>
               </CardFooter>
             </Card>
           ))}
