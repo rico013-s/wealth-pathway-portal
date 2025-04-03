@@ -17,7 +17,13 @@ const Navbar = () => {
     <nav className="w-full bg-black/90 backdrop-blur-sm fixed top-0 z-50 shadow-sm">
       <div className="container mx-auto flex items-center justify-between py-4">
         <div className="flex items-center">
-          <Link to="/" className="text-2xl font-bold text-white">Markets<span className="text-gold-500">4all</span></Link>
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/2cae3f61-eeaa-47a6-b529-e8050d67d8fe.png" 
+              alt="Markets4all" 
+              className="h-10 mr-2"
+            />
+          </Link>
         </div>
         
         <div className="hidden md:flex items-center space-x-8">
@@ -40,6 +46,7 @@ const Navbar = () => {
           </DropdownMenu>
           
           <a href="#about" className="text-white hover:text-gold-500 font-medium">Despre noi</a>
+          <Link to="/careers" className="text-white hover:text-gold-500 font-medium">Cariere</Link>
           <a href="#contact" className="text-white hover:text-gold-500 font-medium">Contact</a>
         </div>
         
@@ -79,6 +86,7 @@ const Navbar = () => {
             <a href="#services" className="text-white hover:text-gold-500 font-medium py-2">Servicii</a>
             <a href="#companies" className="text-white hover:text-gold-500 font-medium py-2">Companii</a>
             <a href="#about" className="text-white hover:text-gold-500 font-medium py-2">Despre noi</a>
+            <Link to="/careers" className="text-white hover:text-gold-500 font-medium py-2">Cariere</Link>
             <a href="#contact" className="text-white hover:text-gold-500 font-medium py-2">Contact</a>
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
               <Link to="/login">

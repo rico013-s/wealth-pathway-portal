@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, BookOpen, Landmark, Coins, BarChart4, DollarSign, PieChart } from 'lucide-react';
+import { ArrowRight, BookOpen, Landmark, Coins, BarChart4, LineChart, PieChart, TrendingUp } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -26,7 +26,7 @@ const Dashboard = () => {
     {
       id: 'forex',
       name: 'Piața Valutară (Forex)',
-      icon: <DollarSign className="h-10 w-10 text-gold-500" />,
+      icon: <LineChart className="h-10 w-10 text-gold-500" />,
       tasks: [
         {
           id: 'forex-1',
@@ -49,26 +49,26 @@ const Dashboard = () => {
       ],
     },
     {
-      id: 'gold',
-      name: 'Aur',
+      id: 'commodities',
+      name: 'Mărfuri',
       icon: <Coins className="h-10 w-10 text-gold-500" />,
       tasks: [
         {
-          id: 'gold-1',
-          title: 'Unitatea de Măsură',
-          description: 'O uncie de aur (troy ounce) echivalează cu aproximativ 31.1 grame. Aceasta este unitatea standard pentru măsurarea aurului pe piețele internaționale.',
+          id: 'commodities-1',
+          title: 'Tipuri de Mărfuri',
+          description: 'Învață despre diferitele tipuri de mărfuri: metale prețioase (aur, argint), energie (petrol, gaz natural), agricole (grâu, porumb, cafea) și cum se tranzacționează fiecare.',
           completed: false,
         },
         {
-          id: 'gold-2',
+          id: 'commodities-2',
           title: 'Factorii de Influență',
-          description: 'Identifică factorii principali care influențează prețul aurului: inflația, politicile băncilor centrale, cererea pentru bijuterii și incertitudinile geopolitice.',
+          description: 'Identifică factorii principali care influențează prețurile mărfurilor: cerere și ofertă, condiții meteorologice, politici guvernamentale, valoarea dolarului și stocurile globale.',
           completed: false,
         },
         {
-          id: 'gold-3',
-          title: 'Corelații cu Alte Active',
-          description: 'Înțelege relația dintre prețul aurului și dolarul american. De obicei, există o corelație negativă între aceste două active.',
+          id: 'commodities-3',
+          title: 'Modalități de Investiție',
+          description: 'Explorează diferitele modalități de a investi în mărfuri: contracte futures, ETF-uri specializate pe mărfuri, acțiuni ale companiilor producătoare și fonduri mutuale.',
           completed: false,
         },
       ],
@@ -76,7 +76,7 @@ const Dashboard = () => {
     {
       id: 'stocks',
       name: 'Acțiuni',
-      icon: <BarChart4 className="h-10 w-10 text-gold-500" />,
+      icon: <TrendingUp className="h-10 w-10 text-gold-500" />,
       tasks: [
         {
           id: 'stocks-1',
@@ -94,6 +94,31 @@ const Dashboard = () => {
           id: 'stocks-3',
           title: 'Analiza Sectorială',
           description: 'Învață să analizezi performanța diferitelor sectoare economice și cum acestea sunt influențate de ciclurile economice.',
+          completed: false,
+        },
+      ],
+    },
+    {
+      id: 'etf-indices',
+      name: 'ETF-uri și Indici',
+      icon: <BarChart4 className="h-10 w-10 text-gold-500" />,
+      tasks: [
+        {
+          id: 'etf-1',
+          title: 'Structura unui ETF',
+          description: 'Înțelege cum sunt structurate fondurile tranzacționate la bursă (ETF) și avantajele lor comparativ cu fondurile mutuale tradiționale: lichiditate, costuri reduse și diversificare.',
+          completed: false,
+        },
+        {
+          id: 'etf-2',
+          title: 'Indici Globali',
+          description: 'Cunoaște principalii indici bursieri globali (S&P 500, NASDAQ, FTSE 100, DAX, Nikkei) și ce reprezintă aceștia. Înțelege cum poți investi în acești indici prin ETF-uri.',
+          completed: false,
+        },
+        {
+          id: 'etf-3',
+          title: 'ETF-uri Tematice',
+          description: 'Explorează ETF-urile tematice care se concentrează pe sectoare specifice precum tehnologie, energie verde sau inteligență artificială și cum pot fi folosite pentru a investi în tendințe emergente.',
           completed: false,
         },
       ],
