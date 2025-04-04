@@ -55,30 +55,22 @@ const HeroSection = () => {
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center animate-slide-up relative">
-            {/* Bull Animation (Left side) */}
-            <div className="absolute -left-20 md:-left-32 top-1/2 transform -translate-y-1/2 hidden md:block">
-              <div className="relative">
-                <div className="flex flex-col items-center">
-                  <TrendingUp className="h-16 w-16 text-green-500 mb-2 animate-pulse" />
-                  <div className="bg-green-500/20 p-3 rounded-lg">
-                    <div className="text-green-500 font-bold text-lg">BULL</div>
-                    <div className="text-green-400 text-sm">Piață în creștere</div>
-                  </div>
-                  <div className="h-32 w-1 bg-gradient-to-b from-green-500 to-transparent mt-2"></div>
+            {/* Bull Icon (Left side) */}
+            <div className="absolute -left-16 top-1/2 transform -translate-y-1/2 hidden md:block">
+              <div className="p-4">
+                <TrendingUp className="h-20 w-20 text-green-500" />
+                <div className="text-center mt-2">
+                  <div className="text-green-500 font-bold">BULL</div>
                 </div>
               </div>
             </div>
             
-            {/* Bear Animation (Right side) */}
-            <div className="absolute -right-20 md:-right-32 top-1/2 transform -translate-y-1/2 hidden md:block">
-              <div className="relative">
-                <div className="flex flex-col items-center">
-                  <TrendingDown className="h-16 w-16 text-red-500 mb-2 animate-pulse" />
-                  <div className="bg-red-500/20 p-3 rounded-lg">
-                    <div className="text-red-500 font-bold text-lg">BEAR</div>
-                    <div className="text-red-400 text-sm">Piață în scădere</div>
-                  </div>
-                  <div className="h-32 w-1 bg-gradient-to-b from-red-500 to-transparent mt-2"></div>
+            {/* Bear Icon (Right side) */}
+            <div className="absolute -right-16 top-1/2 transform -translate-y-1/2 hidden md:block">
+              <div className="p-4">
+                <TrendingDown className="h-20 w-20 text-red-500" />
+                <div className="text-center mt-2">
+                  <div className="text-red-500 font-bold">BEAR</div>
                 </div>
               </div>
             </div>

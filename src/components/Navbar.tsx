@@ -22,7 +22,7 @@ const Navbar = () => {
           </Link>
         </div>
         
-        <div className="hidden md:flex items-center space-x-6 ml-10">
+        <div className="hidden md:flex items-center space-x-8 mx-auto">
           <a href="#services" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Servicii</a>
           
           <DropdownMenu>
