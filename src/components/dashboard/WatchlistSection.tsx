@@ -8,7 +8,7 @@ import WatchlistItem from './WatchlistItem';
 import { toast } from 'sonner';
 import { UserTier } from './UserTierBadge';
 
-interface WatchlistItem {
+export interface WatchlistItem {
   id: string;
   name: string;
   price: string;
@@ -19,9 +19,15 @@ interface WatchlistItem {
 
 interface WatchlistSectionProps {
   userTier: UserTier;
+  onSelectAsset?: (asset: WatchlistItem) => void;
+  selectedAssetId?: string;
 }
 
-const WatchlistSection: React.FC<WatchlistSectionProps> = ({ userTier }) => {
+const WatchlistSection: React.FC<WatchlistSectionProps> = ({ 
+  userTier, 
+  onSelectAsset,
+  selectedAssetId 
+}) => {
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([
     { id: '1', name: 'EUR/USD', price: '1.0862', change: '0.15%', isUp: true, hasAlert: false },
     { id: '2', name: 'Aur (XAU)', price: '2,315.30', change: '0.42%', isUp: true, hasAlert: true },
@@ -56,9 +62,57 @@ const WatchlistSection: React.FC<WatchlistSectionProps> = ({ userTier }) => {
     setWatchlist(watchlist.filter(item => item.id !== id));
     toast.success('Instrument financiar eliminat din Watchlist');
   };
+
+  const handleSelectAsset = (asset: WatchlistItem) => {
+    if (onSelectAsset) {
+      onSelectAsset(asset);
+    }
+  };
   
   // Only silver and gold tiers can add more than 3 items
   const canAddMoreItems = userTier !== 'bronze' || watchlist.length < 3;
+  
+  // Set up interval to simulate live price updates
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setWatchlist(prevWatchlist => 
+        prevWatchlist.map(item => {
+          const isUp = Math.random() > 0.5;
+          const changeValue = (Math.random() * 1.5).toFixed(2);
+          const change = `${changeValue}%`;
+          
+          // For EUR/USD, generate a more realistic price
+          let price = item.price;
+          if (item.name === 'EUR/USD') {
+            const currentPrice = parseFloat(item.price.replace(',', '.'));
+            const newPrice = currentPrice + (isUp ? 0.0005 : -0.0005) * Math.random();
+            price = newPrice.toFixed(4);
+          } 
+          // For Gold (XAU), generate a more realistic price
+          else if (item.name === 'Aur (XAU)') {
+            const currentPrice = parseFloat(item.price.replace(',', ''));
+            const newPrice = currentPrice + (isUp ? 1 : -1) * Math.random() * 5;
+            price = newPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          }
+          // For stocks and other assets
+          else {
+            const currentPrice = parseFloat(item.price.replace(',', '.'));
+            const newPrice = currentPrice + (isUp ? 0.1 : -0.1) * Math.random() * 2;
+            price = newPrice.toFixed(2);
+          }
+          
+          return {
+            ...item,
+            price,
+            change,
+            isUp
+          };
+        })
+      );
+    }, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
   
   return (
     <Card className="bg-gray-900 border-gray-800">
@@ -71,7 +125,9 @@ const WatchlistSection: React.FC<WatchlistSectionProps> = ({ userTier }) => {
             <WatchlistItem 
               key={item.id} 
               asset={item} 
-              onRemove={handleRemoveItem} 
+              onRemove={handleRemoveItem}
+              onSelect={handleSelectAsset}
+              isSelected={selectedAssetId === item.id}
             />
           ))}
           

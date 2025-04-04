@@ -4,26 +4,36 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eye, AlertTriangle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { WatchlistItem as WatchlistItemType } from './WatchlistSection';
 
 interface WatchlistItemProps {
-  asset: {
-    id: string;
-    name: string;
-    price: string;
-    change: string;
-    isUp: boolean;
-    hasAlert: boolean;
-  };
+  asset: WatchlistItemType;
   onRemove: (id: string) => void;
+  onSelect?: (asset: WatchlistItemType) => void;
+  isSelected?: boolean;
 }
 
-const WatchlistItem: React.FC<WatchlistItemProps> = ({ asset, onRemove }) => {
+const WatchlistItem: React.FC<WatchlistItemProps> = ({ 
+  asset, 
+  onRemove, 
+  onSelect,
+  isSelected = false
+}) => {
   const handleAlertClick = () => {
     toast.success(`Alertă configurată pentru ${asset.name}`);
   };
+
+  const handleClick = () => {
+    if (onSelect) {
+      onSelect(asset);
+    }
+  };
   
   return (
-    <Card className="bg-gray-800 border-gray-700 hover:border-gold-500/50 transition-all">
+    <Card 
+      className={`bg-gray-800 border-gray-700 hover:border-gold-500/50 transition-all cursor-pointer ${isSelected ? 'border-gold-500' : ''}`}
+      onClick={handleClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -40,7 +50,10 @@ const WatchlistItem: React.FC<WatchlistItemProps> = ({ asset, onRemove }) => {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-gray-400 hover:text-gold-500"
-              onClick={handleAlertClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAlertClick();
+              }}
             >
               <AlertTriangle className="h-4 w-4" />
             </Button>
@@ -48,7 +61,10 @@ const WatchlistItem: React.FC<WatchlistItemProps> = ({ asset, onRemove }) => {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-gray-400 hover:text-red-500"
-              onClick={() => onRemove(asset.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(asset.id);
+              }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

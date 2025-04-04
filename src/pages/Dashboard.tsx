@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, BookOpen, Landmark, Coins, BarChart4, LineChart, PieChart, TrendingUp, Bell } from 'lucide-react';
+import { ArrowRight, BookOpen, Landmark, Coins, BarChart4, LineChart, PieChart, TrendingUp, Bell, Flag } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +14,7 @@ import UserTierBadge, { UserTier } from '@/components/dashboard/UserTierBadge';
 import MarketChart from '@/components/dashboard/MarketChart';
 import PortfolioTracker from '@/components/dashboard/PortfolioTracker';
 import TaskList from '@/components/dashboard/TaskList';
-import WatchlistSection from '@/components/dashboard/WatchlistSection';
+import WatchlistSection, { WatchlistItem } from '@/components/dashboard/WatchlistSection';
 
 type FinancialAsset = {
   id: string;
@@ -33,6 +33,8 @@ const Dashboard = () => {
   const [selectedAsset, setSelectedAsset] = useState<string>('');
   const [userTier, setUserTier] = useState<UserTier>('bronze');
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [selectedWatchlistItem, setSelectedWatchlistItem] = useState<WatchlistItem | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
 
   // Display a welcome notification on first load
   useEffect(() => {
@@ -45,6 +47,42 @@ const Dashboard = () => {
       setIsFirstLoad(false);
     }
   }, [isFirstLoad]);
+
+  // Generate chart data based on selected watchlist item
+  useEffect(() => {
+    if (selectedWatchlistItem) {
+      // Generate random data based on the asset name to simulate different patterns
+      let baseValue = 100;
+      let volatility = 0.02;
+      
+      // Adjust base value and volatility based on asset name
+      if (selectedWatchlistItem.name === 'EUR/USD') {
+        baseValue = 1.08;
+        volatility = 0.005;
+      } else if (selectedWatchlistItem.name === 'Aur (XAU)') {
+        baseValue = 2300;
+        volatility = 0.015;
+      } else if (selectedWatchlistItem.name.includes('Apple')) {
+        baseValue = 185;
+        volatility = 0.02;
+      }
+      
+      // Generate data points
+      const data = Array.from({ length: 30 }, (_, i) => {
+        // Create a slightly trending pattern
+        const trend = (i / 30) * 0.05; // 5% trend over 30 days
+        const randomFactor = (Math.random() - 0.5) * volatility;
+        const value = baseValue * (1 + trend + randomFactor);
+        
+        return {
+          name: `Ziua ${i + 1}`,
+          value: parseFloat(value.toFixed(4))
+        };
+      });
+      
+      setChartData(data);
+    }
+  }, [selectedWatchlistItem]);
 
   const financialAssets: FinancialAsset[] = [
     {
@@ -271,6 +309,11 @@ const Dashboard = () => {
     console.log(`Task ${taskId} completed`);
   };
 
+  const handleWatchlistItemSelect = (item: WatchlistItem) => {
+    setSelectedWatchlistItem(item);
+    toast.info(`Grafic actualizat pentru ${item.name}`);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -287,6 +330,14 @@ const Dashboard = () => {
                 <UserTierBadge tier={userTier} />
               </div>
               <p className="text-gray-400">Platformă educațională pentru dezvoltarea abilităților tale de investiții</p>
+              
+              {/* Language selection */}
+              <div className="absolute top-8 right-8 flex items-center gap-2">
+                <Button variant="outline" size="sm" className="flex items-center gap-1 border-gray-700">
+                  <Flag className="h-4 w-4" />
+                  <span>Română</span>
+                </Button>
+              </div>
               
               {/* For demo purposes only - tier switcher */}
               <div className="mt-4 flex gap-2 justify-center">
@@ -362,14 +413,19 @@ const Dashboard = () => {
                 
                 <TabsContent value="tracking" className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Chart */}
+                    {/* Chart - now uses data from selected watchlist item */}
                     <MarketChart 
-                      assetName={selectedAssetData.name} 
-                      assetType="Prețuri ultimele 30 zile" 
+                      assetName={selectedWatchlistItem ? selectedWatchlistItem.name : selectedAssetData.name} 
+                      assetType={selectedWatchlistItem ? "Cotație live" : "Prețuri ultimele 30 zile"}
+                      data={chartData.length > 0 ? chartData : undefined}
                     />
                     
-                    {/* Watchlist */}
-                    <WatchlistSection userTier={userTier} />
+                    {/* Watchlist - now with selection capability */}
+                    <WatchlistSection 
+                      userTier={userTier}
+                      onSelectAsset={handleWatchlistItemSelect}
+                      selectedAssetId={selectedWatchlistItem?.id}
+                    />
                   </div>
                   
                   <div className="mt-6">
