@@ -19,11 +19,11 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between py-4">
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
-            <span className="text-gold-500 font-bold text-2xl">Markets<span className="text-white">4all</span></span>
+            <span className="font-bold text-2xl"><span className="text-white">Markets</span><span className="text-gold-500">4all</span></span>
           </Link>
         </div>
         
-        <div className="hidden md:flex items-center space-x-8">
+        <div className="hidden md:flex items-center space-x-8 ml-12">
           <a href="#services" className="text-white hover:text-gold-500 font-medium">Servicii</a>
           
           <DropdownMenu>

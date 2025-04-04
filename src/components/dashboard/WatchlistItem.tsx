@@ -31,13 +31,13 @@ const WatchlistItem: React.FC<WatchlistItemProps> = ({
   
   return (
     <Card 
-      className={`bg-gray-800 border-gray-700 hover:border-gold-500/50 transition-all cursor-pointer ${isSelected ? 'border-gold-500' : ''}`}
+      className={`bg-gray-800 border-gray-700 hover:border-gold-500/50 transition-all cursor-pointer ${isSelected ? 'border-gold-500 shadow-md shadow-gold-500/20' : ''}`}
       onClick={handleClick}
     >
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium text-white">{asset.name}</h3>
+            <h3 className={`font-medium ${isSelected ? 'text-gold-500' : 'text-white'}`}>{asset.name}</h3>
             <div className="flex items-center space-x-2 mt-1">
               <span className="text-gray-300">{asset.price}</span>
               <span className={`text-xs font-medium ${asset.isUp ? 'text-green-400' : 'text-red-400'}`}>
