@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Info, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowRight, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
@@ -55,26 +55,6 @@ const HeroSection = () => {
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center animate-slide-up relative">
-            {/* Bull Icon (Left side) */}
-            <div className="absolute -left-16 top-1/2 transform -translate-y-1/2 hidden md:block">
-              <div className="p-4">
-                <TrendingUp className="h-20 w-20 text-green-500" />
-                <div className="text-center mt-2">
-                  <div className="text-green-500 font-bold">BULL</div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Bear Icon (Right side) */}
-            <div className="absolute -right-16 top-1/2 transform -translate-y-1/2 hidden md:block">
-              <div className="p-4">
-                <TrendingDown className="h-20 w-20 text-red-500" />
-                <div className="text-center mt-2">
-                  <div className="text-red-500 font-bold">BEAR</div>
-                </div>
-              </div>
-            </div>
-
             <div className="relative">
               <div className="absolute -left-6 -top-6 w-64 h-64 bg-gold-500/20 rounded-full blur-3xl"></div>
               <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-gold-500/20 rounded-full blur-3xl"></div>
