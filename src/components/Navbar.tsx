@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, UserCircle, LogIn, Globe } from 'lucide-react';
+import { UserCircle, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [language, setLanguage] = useState('ro'); // 'ro' for Romanian, 'en' for English
 
   return (
     <nav className="w-full bg-black/90 backdrop-blur-sm fixed top-0 z-50 shadow-sm">
@@ -23,13 +22,13 @@ const Navbar = () => {
           </Link>
         </div>
         
-        <div className="hidden md:flex items-center space-x-8 ml-12">
-          <a href="#services" className="text-white hover:text-gold-500 font-medium">Servicii</a>
+        <div className="hidden md:flex items-center space-x-6 ml-10">
+          <a href="#services" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Servicii</a>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center text-white hover:text-gold-500 font-medium">
-                Companii <ChevronDown className="ml-1 h-4 w-4" />
+              <button className="flex items-center text-white hover:text-gold-500 font-medium whitespace-nowrap">
+                Companii
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-black/90 border border-gold-500">
@@ -42,33 +41,9 @@ const Navbar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <a href="#about" className="text-white hover:text-gold-500 font-medium">Despre noi</a>
-          <Link to="/careers" className="text-white hover:text-gold-500 font-medium">Cariere</Link>
-          <a href="#contact" className="text-white hover:text-gold-500 font-medium">Contact</a>
-          
-          {/* Language selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center text-white hover:text-gold-500 font-medium">
-                <Globe className="mr-1 h-4 w-4" />
-                {language === 'ro' ? 'RO' : 'EN'} <ChevronDown className="ml-1 h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-black/90 border border-gold-500">
-              <DropdownMenuItem 
-                className={`hover:bg-gray-800 ${language === 'ro' ? 'text-gold-500' : 'text-white'}`} 
-                onClick={() => setLanguage('ro')}
-              >
-                🇷🇴 Română
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className={`hover:bg-gray-800 ${language === 'en' ? 'text-gold-500' : 'text-white'}`}
-                onClick={() => setLanguage('en')}
-              >
-                🇬🇧 English
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <a href="#about" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Despre noi</a>
+          <Link to="/careers" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Cariere</Link>
+          <a href="#contact" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Contact</a>
         </div>
         
         <div className="hidden md:flex items-center space-x-4">
@@ -109,22 +84,6 @@ const Navbar = () => {
             <a href="#about" className="text-white hover:text-gold-500 font-medium py-2">Despre noi</a>
             <Link to="/careers" className="text-white hover:text-gold-500 font-medium py-2">Cariere</Link>
             <a href="#contact" className="text-white hover:text-gold-500 font-medium py-2">Contact</a>
-            
-            {/* Language options for mobile */}
-            <div className="flex gap-4 py-2 border-t border-gray-800">
-              <button 
-                className={`px-2 py-1 rounded flex items-center ${language === 'ro' ? 'bg-gold-500 text-black' : 'text-white'}`}
-                onClick={() => setLanguage('ro')}
-              >
-                🇷🇴 Română
-              </button>
-              <button 
-                className={`px-2 py-1 rounded flex items-center ${language === 'en' ? 'bg-gold-500 text-black' : 'text-white'}`}
-                onClick={() => setLanguage('en')}
-              >
-                🇬🇧 English
-              </button>
-            </div>
             
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
               <Link to="/login">
