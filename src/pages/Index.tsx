@@ -10,6 +10,7 @@ import CTASection from '@/components/CTASection';
 import AboutSection from '@/components/AboutSection';
 import Footer from '@/components/Footer';
 import EducationalSection from '@/components/EducationalSection';
+import RecruitmentBanner from '@/components/RecruitmentBanner';
 
 const Index = () => {
   return (
@@ -23,6 +24,7 @@ const Index = () => {
         <EducationalSection />
         <TestimonialsSection />
         <AboutSection />
+        <RecruitmentBanner />
         <CTASection />
       </main>
       <Footer />
