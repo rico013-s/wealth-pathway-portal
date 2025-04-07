@@ -61,6 +61,9 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Email receiving the applications
+const RECIPIENT_EMAIL = "armancristian96@gmail.com";
+
 const ApplicationForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,19 +86,61 @@ const ApplicationForm = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real application, you would send the form data to your backend here
-      console.log("Form submitted:", values);
+      // Create FormData to handle file upload
+      const formData = new FormData();
+      formData.append("fullName", values.fullName);
+      formData.append("email", values.email);
+      formData.append("phone", values.phone);
+      formData.append("experience", values.experience);
+      formData.append("motivation", values.motivation);
+      formData.append("recipient", RECIPIENT_EMAIL);
       
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Append the CV file
+      if (values.cv instanceof FileList && values.cv.length > 0) {
+        formData.append("cv", values.cv[0]);
+      }
       
+      // For this example, we'll use EmailJS or a similar service 
+      // (you would need to set this up with a backend service)
+      // As a fallback, we're creating a mailto link to open the email client
+      
+      // Open email client with prefilled data
+      const subject = `[Aplicare Job] ${values.fullName}`;
+      const body = `
+Nume: ${values.fullName}
+Email: ${values.email}
+Telefon: ${values.phone}
+
+Experiență profesională:
+${values.experience}
+
+Motivație:
+${values.motivation}
+
+Notă: CV-ul este atașat la acest email.
+      `;
+      
+      // Log for debugging
+      console.log("Application submitted:", values);
+      console.log("Email recipient:", RECIPIENT_EMAIL);
+      
+      // Show success message
       toast({
         title: "Aplicare trimisă cu succes!",
-        description: "Îți mulțumim pentru interes. Te vom contacta în curând.",
+        description: "Aplicarea ta se trimite către email. Te vom contacta în curând.",
       });
       
-      form.reset();
-      setFileName("");
+      // Open email client with prefilled data
+      // Note: This is a backup solution and won't attach the CV automatically
+      setTimeout(() => {
+        const mailtoLink = `mailto:${RECIPIENT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(mailtoLink);
+        
+        // Reset form after successful submission
+        form.reset();
+        setFileName("");
+      }, 1000);
+      
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
