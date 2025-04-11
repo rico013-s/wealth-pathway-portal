@@ -11,6 +11,7 @@ import { ArrowRight, User, Mail, Calendar } from 'lucide-react';
 import { UserTier } from '@/components/dashboard/UserTierBadge';
 import UserTierBadge from '@/components/dashboard/UserTierBadge';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface UserData {
   name: string;
@@ -49,6 +50,15 @@ const Account = () => {
         parsedUserData.subscriptionPlan = 'bronze';
         localStorage.setItem('userData', JSON.stringify(parsedUserData));
       }
+
+      // Setăm prețul abonamentului în funcție de plan
+      if (parsedUserData.subscriptionPlan === 'silver' && !parsedUserData.subscriptionPrice) {
+        parsedUserData.subscriptionPrice = 49.99;
+        localStorage.setItem('userData', JSON.stringify(parsedUserData));
+      } else if (parsedUserData.subscriptionPlan === 'gold' && !parsedUserData.subscriptionPrice) {
+        parsedUserData.subscriptionPrice = 99.99;
+        localStorage.setItem('userData', JSON.stringify(parsedUserData));
+      }
       
       setUserData(parsedUserData);
     }
@@ -63,6 +73,11 @@ const Account = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleGoToDashboard = () => {
+    navigate('/dashboard');
+    toast.info("Acces la dashboard-ul Markets4all");
   };
 
   if (!userData) {
@@ -139,19 +154,30 @@ const Account = () => {
                       </p>
                     </div>
                     
-                    <Button 
-                      onClick={() => navigate('/subscriptions')}
-                      className={userData.subscriptionPlan === 'bronze' || userData.subscriptionPlan === 'silver' 
-                        ? 'bg-gold-500 hover:bg-gold-600 text-black w-full'
-                        : 'bg-gray-700 hover:bg-gray-600 w-full'}
-                    >
-                      {userData.subscriptionPlan === 'bronze' 
-                        ? 'Abonează-te acum' 
-                        : userData.subscriptionPlan === 'silver'
-                          ? 'Upgrade la Gold'
-                          : 'Gestionează abonamentul'}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
+                    <div className="flex flex-col space-y-3">
+                      <Button 
+                        onClick={() => navigate('/subscriptions')}
+                        className={userData.subscriptionPlan === 'bronze' || userData.subscriptionPlan === 'silver' 
+                          ? 'bg-gold-500 hover:bg-gold-600 text-black'
+                          : 'bg-gray-700 hover:bg-gray-600'}
+                      >
+                        {userData.subscriptionPlan === 'bronze' 
+                          ? 'Abonează-te acum' 
+                          : userData.subscriptionPlan === 'silver'
+                            ? 'Upgrade la Gold'
+                            : 'Gestionează abonamentul'}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        onClick={handleGoToDashboard}
+                        variant="outline"
+                        className="border-gold-500 text-white hover:bg-gold-500/10"
+                      >
+                        Accesează Dashboard
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
