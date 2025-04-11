@@ -21,7 +21,7 @@ const Careers = () => {
             
             <div className="bg-white rounded-lg overflow-hidden">
               <iframe 
-                src="https://docs.google.com/forms/d/e/1FAIpQLSdkfZcZsIewcetHJj8Y1TxlfVXDwGCHsUgrtTMGXCOXDwN_mA/viewform?embedded=true" 
+                src="https://docs.google.com/forms/d/e/1FAIpQLSdNIO_H0QTDCEviuCqeZ10uzYeyqAxn3WrpfNAR3gbRG-15Kg/viewform?embedded=true" 
                 width="100%" 
                 height="800" 
                 frameBorder="0" 
