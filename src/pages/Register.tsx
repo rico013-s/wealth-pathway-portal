@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, User, Mail, Lock, UserCheck } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -19,7 +20,7 @@ const Register = () => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -56,13 +57,32 @@ const Register = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Save user data in localStorage for demonstration purposes
+      // Verificăm dacă există deja un array de utilizatori în localStorage
+      const existingUsersString = localStorage.getItem('allUsers');
+      const existingUsers = existingUsersString ? JSON.parse(existingUsersString) : [];
+      
+      // Verificăm dacă există deja un utilizator cu acest email
+      const existingUser = existingUsers.find((user: any) => user.email === email);
+      
+      if (existingUser) {
+        setErrors({ email: 'Acest email este deja înregistrat' });
+        return;
+      }
+
+      // Creăm datele noului utilizator
       const userData = {
         name,
         email,
-        password
+        password,
+        joinDate: new Date().toISOString().split('T')[0],
+        subscriptionPlan: 'bronze',
       };
       
+      // Adăugăm noul utilizator în array și salvăm în localStorage
+      existingUsers.push(userData);
+      localStorage.setItem('allUsers', JSON.stringify(existingUsers));
+      
+      // Salvăm și datele utilizatorului separat pentru a putea fi folosite în alte componente
       localStorage.setItem('userData', JSON.stringify(userData));
       
       toast({

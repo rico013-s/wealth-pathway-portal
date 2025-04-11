@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ const Login = () => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -38,19 +39,27 @@ const Login = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Check if user exists in localStorage
-      const userDataString = localStorage.getItem('userData');
+      // Verificăm dacă există utilizatori în localStorage
+      const allUsersString = localStorage.getItem('allUsers');
       
-      if (!userDataString) {
+      if (!allUsersString) {
         setErrors({ login: 'Nu există niciun utilizator înregistrat' });
         return;
       }
       
-      const userData = JSON.parse(userDataString);
+      const allUsers = JSON.parse(allUsersString);
       
-      if (userData.email === email && userData.password === password) {
+      // Căutăm utilizatorul cu email-ul și parola introduse
+      const foundUser = allUsers.find(
+        (user: any) => user.email === email && user.password === password
+      );
+      
+      if (foundUser) {
         // Set authentication state
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Salvăm datele utilizatorului pentru a le folosi în aplicație
+        localStorage.setItem('userData', JSON.stringify(foundUser));
         
         if (rememberMe) {
           localStorage.setItem('rememberedEmail', email);
@@ -61,7 +70,6 @@ const Login = () => {
         toast({
           title: "Autentificare reușită",
           description: "Bine ai revenit la Markets4all!",
-          variant: "default",
         });
         
         // Redirect to dashboard

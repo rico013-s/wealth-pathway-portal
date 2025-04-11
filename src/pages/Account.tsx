@@ -42,22 +42,34 @@ const Account = () => {
       // Adăugăm o dată de înscriere dacă nu există deja
       if (!parsedUserData.joinDate) {
         parsedUserData.joinDate = new Date().toISOString().split('T')[0];
-        localStorage.setItem('userData', JSON.stringify(parsedUserData));
       }
       
       // Dacă nu există plan de abonament, setăm unul implicit
       if (!parsedUserData.subscriptionPlan) {
         parsedUserData.subscriptionPlan = 'bronze';
-        localStorage.setItem('userData', JSON.stringify(parsedUserData));
       }
 
       // Setăm prețul abonamentului în funcție de plan
       if (parsedUserData.subscriptionPlan === 'silver' && !parsedUserData.subscriptionPrice) {
         parsedUserData.subscriptionPrice = 49.99;
-        localStorage.setItem('userData', JSON.stringify(parsedUserData));
       } else if (parsedUserData.subscriptionPlan === 'gold' && !parsedUserData.subscriptionPrice) {
         parsedUserData.subscriptionPrice = 99.99;
-        localStorage.setItem('userData', JSON.stringify(parsedUserData));
+      }
+      
+      // Actualizăm userData în localStorage și în state
+      localStorage.setItem('userData', JSON.stringify(parsedUserData));
+      
+      // De asemenea, actualizăm utilizatorul în array-ul allUsers
+      const allUsersString = localStorage.getItem('allUsers');
+      if (allUsersString) {
+        const allUsers = JSON.parse(allUsersString);
+        const updatedUsers = allUsers.map((user: any) => {
+          if (user.email === parsedUserData.email) {
+            return { ...user, ...parsedUserData };
+          }
+          return user;
+        });
+        localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
       }
       
       setUserData(parsedUserData);
