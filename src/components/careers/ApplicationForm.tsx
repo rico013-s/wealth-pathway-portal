@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Phone, FileText, Upload } from "lucide-react";
+import emailjs from '@emailjs/browser';
 
 import {
   Form,
@@ -64,10 +65,17 @@ type FormValues = z.infer<typeof formSchema>;
 // Email receiving the applications
 const RECIPIENT_EMAIL = "armancristian96@gmail.com";
 
+// EmailJS configuration constants
+// These need to be replaced with your actual EmailJS service details
+const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID"; // Replace with your EmailJS service ID
+const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID"; // Replace with your EmailJS template ID
+const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY"; // Replace with your EmailJS public key
+
 const ApplicationForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileName, setFileName] = useState<string>("");
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Initialize the form
   const form = useForm<FormValues>({
@@ -86,25 +94,66 @@ const ApplicationForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Create FormData to handle file upload
-      const formData = new FormData();
-      formData.append("fullName", values.fullName);
-      formData.append("email", values.email);
-      formData.append("phone", values.phone);
-      formData.append("experience", values.experience);
-      formData.append("motivation", values.motivation);
-      formData.append("recipient", RECIPIENT_EMAIL);
+      // Create FormData to send with EmailJS
+      const templateParams = {
+        from_name: values.fullName,
+        from_email: values.email,
+        to_email: RECIPIENT_EMAIL,
+        phone: values.phone,
+        experience: values.experience,
+        motivation: values.motivation,
+        reply_to: values.email,
+      };
       
-      // Append the CV file
+      // If using the EmailJS file attachment feature (requires Pro plan)
+      let fileData = null;
       if (values.cv instanceof FileList && values.cv.length > 0) {
-        formData.append("cv", values.cv[0]);
+        const file = values.cv[0];
+        const reader = new FileReader();
+        
+        // Convert file to base64 for EmailJS
+        fileData = await new Promise((resolve) => {
+          reader.onload = (event) => {
+            if (event.target) {
+              resolve({
+                name: file.name,
+                data: event.target.result,
+                type: file.type
+              });
+            }
+          };
+          reader.readAsDataURL(file);
+        });
       }
       
-      // For this example, we'll use EmailJS or a similar service 
-      // (you would need to set this up with a backend service)
-      // As a fallback, we're creating a mailto link to open the email client
+      if (fileData) {
+        Object.assign(templateParams, { attachment: fileData });
+      }
       
-      // Open email client with prefilled data
+      // Send email using EmailJS
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_PUBLIC_KEY
+      );
+      
+      console.log("Application submitted successfully:", values.fullName);
+      
+      // Show success message
+      toast({
+        title: "Aplicare trimisă cu succes!",
+        description: "CV-ul tău a fost trimis și va fi analizat în curând.",
+      });
+      
+      // Reset form after successful submission
+      form.reset();
+      setFileName("");
+      
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      
+      // Fallback to mailto link if EmailJS fails
       const subject = `[Aplicare Job] ${values.fullName}`;
       const body = `
 Nume: ${values.fullName}
@@ -117,36 +166,16 @@ ${values.experience}
 Motivație:
 ${values.motivation}
 
-Notă: CV-ul este atașat la acest email.
+Notă: CV-ul trebuie atașat manual la acest email.
       `;
       
-      // Log for debugging
-      console.log("Application submitted:", values);
-      console.log("Email recipient:", RECIPIENT_EMAIL);
+      const mailtoLink = `mailto:${RECIPIENT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(mailtoLink);
       
-      // Show success message
-      toast({
-        title: "Aplicare trimisă cu succes!",
-        description: "Aplicarea ta se trimite către email. Te vom contacta în curând.",
-      });
-      
-      // Open email client with prefilled data
-      // Note: This is a backup solution and won't attach the CV automatically
-      setTimeout(() => {
-        const mailtoLink = `mailto:${RECIPIENT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.open(mailtoLink);
-        
-        // Reset form after successful submission
-        form.reset();
-        setFileName("");
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Error submitting form:", error);
       toast({
         variant: "destructive",
-        title: "A apărut o eroare",
-        description: "Te rugăm să încerci din nou.",
+        title: "A apărut o eroare cu trimiterea automată",
+        description: "Se deschide clientul de email pentru trimitere manuală. Te rugăm să atașezi CV-ul.",
       });
     } finally {
       setIsSubmitting(false);
@@ -168,7 +197,7 @@ Notă: CV-ul este atașat la acest email.
       <h2 className="text-2xl font-bold mb-6 text-center">Aplică pentru o poziție</h2>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" encType="multipart/form-data">
+        <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" encType="multipart/form-data">
           <FormField
             control={form.control}
             name="fullName"
