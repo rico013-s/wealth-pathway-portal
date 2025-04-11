@@ -13,23 +13,73 @@ import { useToast } from '@/components/ui/use-toast';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!email.trim()) {
+      newErrors.email = 'Email-ul este obligatoriu';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Parola este obligatorie';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // În mod normal, aici ar fi logica de autentificare
-    // Pentru demonstrație, vom redirecționa direct către dashboard
-    
-    toast({
-      title: "Autentificare reușită",
-      description: "Bine ai revenit la Markets4all!",
-      variant: "default",
-    });
-    
-    navigate('/dashboard');
+    if (validateForm()) {
+      // Check if user exists in localStorage
+      const userDataString = localStorage.getItem('userData');
+      
+      if (!userDataString) {
+        setErrors({ login: 'Nu există niciun utilizator înregistrat' });
+        return;
+      }
+      
+      const userData = JSON.parse(userDataString);
+      
+      if (userData.email === email && userData.password === password) {
+        // Set authentication state
+        localStorage.setItem('isAuthenticated', 'true');
+        
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
+        toast({
+          title: "Autentificare reușită",
+          description: "Bine ai revenit la Markets4all!",
+          variant: "default",
+        });
+        
+        // Redirect to dashboard
+        navigate('/dashboard');
+      } else {
+        setErrors({ login: 'Email sau parolă incorecte' });
+      }
+    }
   };
+
+  // Check if there's a remembered email
+  React.useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -47,6 +97,12 @@ const Login = () => {
                 <p className="text-gray-400">Intră în contul tău Markets4all</p>
               </div>
               
+              {errors.login && (
+                <div className="bg-red-900/30 border border-red-800 p-3 rounded-md mb-6 text-center">
+                  <p className="text-red-300">{errors.login}</p>
+                </div>
+              )}
+              
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -61,6 +117,7 @@ const Login = () => {
                     />
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
+                  {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
                 </div>
                 
                 <div className="space-y-2">
@@ -81,10 +138,15 @@ const Login = () => {
                     />
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
+                  {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="remember" />
+                  <Checkbox 
+                    id="remember" 
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
                   <label
                     htmlFor="remember"
                     className="text-sm text-gray-300 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
