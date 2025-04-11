@@ -67,9 +67,9 @@ const Login = () => {
           localStorage.removeItem('rememberedEmail');
         }
         
-        toast({
-          title: "Autentificare reușită",
-          description: "Bine ai revenit la Markets4all!",
+        // Changed the toast implementation to match the expected API
+        toast("Autentificare reușită", {
+          description: "Bine ai revenit la Markets4all!"
         });
         
         // Redirect to dashboard

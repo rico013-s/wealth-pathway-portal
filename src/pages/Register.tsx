@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,11 +56,9 @@ const Register = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Verificăm dacă există deja un array de utilizatori în localStorage
       const existingUsersString = localStorage.getItem('allUsers');
       const existingUsers = existingUsersString ? JSON.parse(existingUsersString) : [];
       
-      // Verificăm dacă există deja un utilizator cu acest email
       const existingUser = existingUsers.find((user: any) => user.email === email);
       
       if (existingUser) {
@@ -69,7 +66,6 @@ const Register = () => {
         return;
       }
 
-      // Creăm datele noului utilizator
       const userData = {
         name,
         email,
@@ -78,20 +74,15 @@ const Register = () => {
         subscriptionPlan: 'bronze',
       };
       
-      // Adăugăm noul utilizator în array și salvăm în localStorage
       existingUsers.push(userData);
       localStorage.setItem('allUsers', JSON.stringify(existingUsers));
       
-      // Salvăm și datele utilizatorului separat pentru a putea fi folosite în alte componente
       localStorage.setItem('userData', JSON.stringify(userData));
       
-      toast({
-        title: "Înregistrare reușită!",
-        description: "Contul tău a fost creat cu succes.",
-        variant: "default",
+      toast("Înregistrare reușită!", {
+        description: "Contul tău a fost creat cu succes."
       });
       
-      // Redirect to login
       navigate('/login');
     }
   };
