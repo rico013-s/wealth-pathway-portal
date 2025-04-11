@@ -1,10 +1,10 @@
+
 import React, { useState, useRef } from 'react';
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Phone, FileText, Upload } from "lucide-react";
-import emailjs from '@emailjs/browser';
 
 import {
   Form,
@@ -64,11 +64,6 @@ type FormValues = z.infer<typeof formSchema>;
 // Email receiving the applications
 const RECIPIENT_EMAIL = "armancristian96@gmail.com";
 
-// EmailJS configuration constants
-const EMAILJS_SERVICE_ID = "service_y69305r"; // Your EmailJS service ID
-const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID"; // Replace with your EmailJS template ID
-const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY"; // Replace with your EmailJS public key
-
 const ApplicationForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,67 +87,16 @@ const ApplicationForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Create FormData to send with EmailJS
-      const templateParams = {
-        from_name: values.fullName,
-        from_email: values.email,
-        to_email: RECIPIENT_EMAIL,
-        phone: values.phone,
-        experience: values.experience,
-        motivation: values.motivation,
-        reply_to: values.email,
-      };
+      // Get CV file information
+      const cvFile = values.cv[0];
+      const fileName = cvFile.name;
+      const fileType = cvFile.type;
+      const fileSize = Math.round(cvFile.size / 1024); // Convert to KB
       
-      // If using the EmailJS file attachment feature (requires Pro plan)
-      let fileData = null;
-      if (values.cv instanceof FileList && values.cv.length > 0) {
-        const file = values.cv[0];
-        const reader = new FileReader();
-        
-        // Convert file to base64 for EmailJS
-        fileData = await new Promise((resolve) => {
-          reader.onload = (event) => {
-            if (event.target) {
-              resolve({
-                name: file.name,
-                data: event.target.result,
-                type: file.type
-              });
-            }
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-      
-      if (fileData) {
-        Object.assign(templateParams, { attachment: fileData });
-      }
-      
-      // Send email using EmailJS
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        templateParams,
-        EMAILJS_PUBLIC_KEY
-      );
-      
-      console.log("Application submitted successfully:", values.fullName);
-      
-      // Show success message
-      toast({
-        title: "Aplicare trimisă cu succes!",
-        description: "CV-ul tău a fost trimis și va fi analizat în curând.",
-      });
-      
-      // Reset form after successful submission
-      form.reset();
-      setFileName("");
-      
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      
-      // Fallback to mailto link if EmailJS fails
+      // Create subject line
       const subject = `[Aplicare Job] ${values.fullName}`;
+      
+      // Create email body with important information
       const body = `
 Nume: ${values.fullName}
 Email: ${values.email}
@@ -164,20 +108,61 @@ ${values.experience}
 Motivație:
 ${values.motivation}
 
-Notă: CV-ul trebuie atașat manual la acest email.
-      `;
-      
+Informații despre CV:
+Nume fișier: ${fileName}
+Tip: ${fileType}
+Dimensiune: ${fileSize} KB
+
+Notă: Acest email a fost generat automat. CV-ul nu este atașat direct din motive de securitate.
+Contactați aplicantul la ${values.email} pentru a solicita CV-ul.
+`;
+
+      // Create and open mailto link
       const mailtoLink = `mailto:${RECIPIENT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.open(mailtoLink);
       
+      // Store in local storage for your record (can be checked in admin section)
+      saveApplicationToLocalStorage(values, fileName);
+      
+      toast({
+        title: "Aplicare trimisă cu succes!",
+        description: "Te vom contacta în curând pentru următoarele etape.",
+      });
+      
+      // Reset form
+      form.reset();
+      setFileName("");
+      
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      
       toast({
         variant: "destructive",
-        title: "A apărut o eroare cu trimiterea automată",
-        description: "Se deschide clientul de email pentru trimitere manuală. Te rugăm să atașezi CV-ul.",
+        title: "A apărut o eroare",
+        description: "Nu am putut procesa aplicarea ta. Te rugăm să încerci din nou sau să ne contactezi direct.",
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Save application to local storage for admin reference
+  const saveApplicationToLocalStorage = (values: FormValues, fileName: string) => {
+    const applications = JSON.parse(localStorage.getItem('jobApplications') || '[]');
+    
+    applications.push({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      fullName: values.fullName,
+      email: values.email,
+      phone: values.phone,
+      experience: values.experience,
+      motivation: values.motivation,
+      cvFileName: fileName,
+    });
+    
+    localStorage.setItem('jobApplications', JSON.stringify(applications));
+    console.log("Application saved to local storage");
   };
 
   // Handle file input change
