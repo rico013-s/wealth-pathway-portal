@@ -11,6 +11,7 @@ import AboutSection from '@/components/AboutSection';
 import Footer from '@/components/Footer';
 import EducationalSection from '@/components/EducationalSection';
 import RecruitmentBanner from '@/components/RecruitmentBanner';
+import EventBanner from '@/components/EventBanner';
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
+        <EventBanner />
         <ServicesSection />
         <CompaniesSection />
         <ComparisonSection />
