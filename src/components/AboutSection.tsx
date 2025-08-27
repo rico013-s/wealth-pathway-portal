@@ -8,7 +8,7 @@ const AboutSection = () => {
       name: "Arman Cristian Hosseinzadeh",
       role: "Fondator & CEO",
       description: "Cu peste 10 ani de experiență în domeniul investițiilor, Arman a fondat Markets4all cu misiunea de a democratiza accesul la educație financiară și oportunități de investiții pentru toată lumea.",
-      image: "/lovable-uploads/2cae3f61-eeaa-47a6-b529-e8050d67d8fe.png" // Folosim momentan logoului ca placeholder
+      image: "/lovable-uploads/fedca4a0-09b5-4aa2-a404-541005ccc0d6.png"
     },
     {
       name: "Ana Popescu",
