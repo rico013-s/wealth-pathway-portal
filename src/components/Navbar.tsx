@@ -1,43 +1,16 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogIn, LogOut, User } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Phone, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from '@/components/ui/use-toast';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Verifică starea de autentificare la încărcarea componentei
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    setIsAuthenticated(authStatus);
-  }, []);
-
-  const handleLogout = () => {
-    // Șterge starea de autentificare
-    localStorage.removeItem('isAuthenticated');
-    setIsAuthenticated(false);
-    
-    // Afișează un toast de confirmare
-    toast({
-      title: "Deconectare reușită",
-      description: "Te-ai deconectat cu succes.",
-      variant: "default",
-    });
-    
-    // Redirecționează către pagina principală
-    navigate('/');
-  };
 
   return (
     <nav className="w-full bg-black/90 backdrop-blur-sm fixed top-0 z-50 shadow-sm">
@@ -70,42 +43,31 @@ const Navbar = () => {
           <a href="#about" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Despre noi</a>
           <Link to="/careers" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Cariere</Link>
           <a href="#contact" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Contact</a>
-          
-          {isAuthenticated && (
-            <Link to="/subscriptions" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Abonamente</Link>
-          )}
         </div>
         
-        <div className="hidden md:flex items-center space-x-4">
-          {!isAuthenticated ? (
-            <>
-              <Link to="/login">
-                <Button variant="outline" className="border-gold-500 text-white hover:bg-gold-500/10">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Autentificare
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-                  <UserCircle className="mr-2 h-4 w-4" />
-                  Înregistrare
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link to="/account">
-                <Button variant="outline" className="border-gold-500 text-white hover:bg-gold-500/10">
-                  <User className="mr-2 h-4 w-4" />
-                  Contul meu
-                </Button>
-              </Link>
-              <Button onClick={handleLogout} className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-                <LogOut className="mr-2 h-4 w-4" />
-                Deconectare
+        <div className="hidden md:flex items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
+                <Phone className="mr-2 h-4 w-4" />
+                Contact
               </Button>
-            </>
-          )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-black/90 border border-gold-500">
+              <DropdownMenuItem className="text-white hover:text-gold-500 hover:bg-gray-800">
+                <a href="tel:0740113111" className="flex items-center w-full">
+                  <Phone className="mr-2 h-4 w-4" />
+                  0740113111
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-white hover:text-gold-500 hover:bg-gray-800">
+                <a href="mailto:markets4allro@gmail.com" className="flex items-center w-full">
+                  <Mail className="mr-2 h-4 w-4" />
+                  markets4allro@gmail.com
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Mobile menu button */}
@@ -132,40 +94,15 @@ const Navbar = () => {
             <Link to="/careers" className="text-white hover:text-gold-500 font-medium py-2">Cariere</Link>
             <a href="#contact" className="text-white hover:text-gold-500 font-medium py-2">Contact</a>
             
-            {isAuthenticated && (
-              <Link to="/subscriptions" className="text-white hover:text-gold-500 font-medium py-2">Abonamente</Link>
-            )}
-            
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
-              {!isAuthenticated ? (
-                <>
-                  <Link to="/login">
-                    <Button variant="outline" className="w-full border-gold-500 text-white">
-                      <LogIn className="mr-2 h-4 w-4" />
-                      Autentificare
-                    </Button>
-                  </Link>
-                  <Link to="/register">
-                    <Button className="w-full bg-gold-500 text-black">
-                      <UserCircle className="mr-2 h-4 w-4" />
-                      Înregistrare
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link to="/account">
-                    <Button variant="outline" className="w-full border-gold-500 text-white">
-                      <User className="mr-2 h-4 w-4" />
-                      Contul meu
-                    </Button>
-                  </Link>
-                  <Button onClick={handleLogout} className="w-full bg-gold-500 text-black">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Deconectare
-                  </Button>
-                </>
-              )}
+              <a href="tel:0740113111" className="flex items-center text-white hover:text-gold-500 font-medium py-2">
+                <Phone className="mr-2 h-4 w-4" />
+                0740113111
+              </a>
+              <a href="mailto:markets4allro@gmail.com" className="flex items-center text-white hover:text-gold-500 font-medium py-2">
+                <Mail className="mr-2 h-4 w-4" />
+                markets4allro@gmail.com
+              </a>
             </div>
           </div>
         </div>
