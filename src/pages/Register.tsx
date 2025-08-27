@@ -6,15 +6,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, User, Mail, Lock, UserCheck } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowRight, User, Mail, Lock, UserCheck, Phone, TrendingUp } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { toast } from 'sonner';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [investmentExperience, setInvestmentExperience] = useState('');
+  const [investmentAmount, setInvestmentAmount] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
@@ -34,6 +38,12 @@ const Register = () => {
       newErrors.email = 'Adresa de email nu este validă';
     }
     
+    if (!phone.trim()) {
+      newErrors.phone = 'Numărul de telefon este obligatoriu';
+    } else if (!/^[+]?[\d\s-()]{10,}$/.test(phone.replace(/\s/g, ''))) {
+      newErrors.phone = 'Numărul de telefon nu este valid';
+    }
+    
     if (!password) {
       newErrors.password = 'Parola este obligatorie';
     } else if (password.length < 6) {
@@ -42,6 +52,14 @@ const Register = () => {
     
     if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Parolele nu corespund';
+    }
+    
+    if (!investmentExperience) {
+      newErrors.investmentExperience = 'Experiența de investiții este obligatorie';
+    }
+    
+    if (!investmentAmount) {
+      newErrors.investmentAmount = 'Suma de investiție este obligatorie';
     }
     
     if (!termsAccepted) {
@@ -69,10 +87,28 @@ const Register = () => {
       const userData = {
         name,
         email,
+        phone,
         password,
+        investmentExperience,
+        investmentAmount,
         joinDate: new Date().toISOString().split('T')[0],
         subscriptionPlan: 'bronze',
       };
+      
+      // Send data via email (you would integrate with EmailJS or similar service here)
+      const mailtoSubject = encodeURIComponent('Înregistrare nouă - Money4All');
+      const mailtoBody = encodeURIComponent(`
+Înregistrare nouă:
+- Nume: ${name}
+- Email: ${email}  
+- Telefon: ${phone}
+- Experiență investiții: ${investmentExperience}
+- Sumă investiție: ${investmentAmount}
+- Data înregistrării: ${userData.joinDate}
+      `);
+      
+      // Open email client with the data
+      window.open(`mailto:contact@money4all.ro?subject=${mailtoSubject}&body=${mailtoBody}`);
       
       existingUsers.push(userData);
       localStorage.setItem('allUsers', JSON.stringify(existingUsers));
@@ -134,6 +170,55 @@ const Register = () => {
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
                   {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Număr de telefon</Label>
+                  <div className="relative">
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      placeholder="+40 123 456 789" 
+                      className="pl-10 bg-gray-800 border-gray-700 text-white"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  </div>
+                  {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="investment-experience">Experiența în investiții</Label>
+                  <Select value={investmentExperience} onValueChange={setInvestmentExperience}>
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                      <SelectValue placeholder="Selectează nivelul de experiență" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Începător</SelectItem>
+                      <SelectItem value="intermediate">Intermediar</SelectItem>
+                      <SelectItem value="advanced">Avansat</SelectItem>
+                      <SelectItem value="expert">Expert</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.investmentExperience && <p className="text-red-500 text-sm">{errors.investmentExperience}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="investment-amount">Suma planificată pentru investiție</Label>
+                  <Select value={investmentAmount} onValueChange={setInvestmentAmount}>
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                      <SelectValue placeholder="Selectează suma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="500-1000">500 - 1.000 RON</SelectItem>
+                      <SelectItem value="1000-5000">1.000 - 5.000 RON</SelectItem>
+                      <SelectItem value="5000-10000">5.000 - 10.000 RON</SelectItem>
+                      <SelectItem value="10000-50000">10.000 - 50.000 RON</SelectItem>
+                      <SelectItem value="50000+">Peste 50.000 RON</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.investmentAmount && <p className="text-red-500 text-sm">{errors.investmentAmount}</p>}
                 </div>
                 
                 <div className="space-y-2">

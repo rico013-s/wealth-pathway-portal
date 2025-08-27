@@ -26,29 +26,7 @@ const companies = [
     specialties: ["Private Equity", "Venture Capital", "Real Estate"],
     minInvestment: "5.000 lei",
     returnRate: "20-25% în medie",
-    highlighted: false,
-  },
-  {
-    name: "Heritage Financial",
-    logo: "HF",
-    description: "Strategii de investiții conservatoare axate pe creștere stabilă și conservarea capitalului.",
-    rating: 4.7,
-    reviewCount: 1560,
-    specialties: ["Acțiuni cu dividende", "Fonduri mutuale", "Pensii"],
-    minInvestment: "100 lei",
-    returnRate: "8-10% în medie",
-    highlighted: false,
-  },
-  {
-    name: "Apex Capital Management",
-    logo: "AC",
-    description: "Strategii de investiții de înaltă performanță care vizează randamente ambițioase pentru investitorii experimentați.",
-    rating: 4.5,
-    reviewCount: 720,
-    specialties: ["Fonduri speculative", "Private Equity", "Mărfuri"],
-    minInvestment: "10.000 lei",
-    returnRate: "18-22% în medie",
-    highlighted: false,
+    highlighted: true,
   }
 ];
 
@@ -64,7 +42,7 @@ const CompaniesSection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {companies.map((company, index) => (
             <Card key={index} className={`bg-gray-900 border border-gray-800 hover:border-gold-500 transition-all duration-300 ${company.highlighted ? 'border-2 border-gold-500 shadow-md' : ''}`}>
               <CardHeader className="relative">

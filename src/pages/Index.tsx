@@ -11,15 +11,12 @@ import AboutSection from '@/components/AboutSection';
 import Footer from '@/components/Footer';
 import EducationalSection from '@/components/EducationalSection';
 import RecruitmentBanner from '@/components/RecruitmentBanner';
-import EventBanner from '@/components/EventBanner';
-
 const Index = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
       <main>
         <HeroSection />
-        <EventBanner />
         <ServicesSection />
         <CompaniesSection />
         <ComparisonSection />
