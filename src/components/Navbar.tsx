@@ -45,12 +45,21 @@ const Navbar = () => {
           <a href="#contact" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Contact</a>
         </div>
         
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center gap-3">
+          <Link to="/login">
+            <Button variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
+              Autentificare
+            </Button>
+          </Link>
+          <Link to="/register">
+            <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
+              Înregistrare
+            </Button>
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-                <Phone className="mr-2 h-4 w-4" />
-                Contact
+              <Button variant="ghost" className="text-white hover:text-gold-500">
+                <Phone className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-black/90 border border-gold-500">
@@ -94,6 +103,19 @@ const Navbar = () => {
             <Link to="/careers" className="text-white hover:text-gold-500 font-medium py-2">Cariere</Link>
             <a href="#contact" className="text-white hover:text-gold-500 font-medium py-2">Contact</a>
             
+            <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
+              <Link to="/login" className="w-full">
+                <Button variant="outline" className="w-full border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
+                  Autentificare
+                </Button>
+              </Link>
+              <Link to="/register" className="w-full">
+                <Button className="w-full bg-gold-500 hover:bg-gold-600 text-black font-semibold">
+                  Înregistrare
+                </Button>
+              </Link>
+            </div>
+
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
               <a href="tel:0740113111" className="flex items-center text-white hover:text-gold-500 font-medium py-2">
                 <Phone className="mr-2 h-4 w-4" />
