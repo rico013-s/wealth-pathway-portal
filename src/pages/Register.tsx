@@ -6,20 +6,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowRight, User, Mail, Lock, UserCheck, Phone, TrendingUp } from 'lucide-react';
+import { ArrowRight, User, Mail, Lock, UserCheck, Phone } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Register = () => {
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [investmentExperience, setInvestmentExperience] = useState('');
-  const [investmentAmount, setInvestmentAmount] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
   const navigate = useNavigate();
@@ -28,8 +28,12 @@ const Register = () => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
     
-    if (!name.trim()) {
-      newErrors.name = 'Numele este obligatoriu';
+    if (!firstName.trim()) {
+      newErrors.firstName = 'Prenumele este obligatoriu';
+    }
+    
+    if (!lastName.trim()) {
+      newErrors.lastName = 'Numele este obligatoriu';
     }
     
     if (!email.trim()) {
@@ -54,14 +58,6 @@ const Register = () => {
       newErrors.confirmPassword = 'Parolele nu corespund';
     }
     
-    if (!investmentExperience) {
-      newErrors.investmentExperience = 'Experiența de investiții este obligatorie';
-    }
-    
-    if (!investmentAmount) {
-      newErrors.investmentAmount = 'Suma de investiție este obligatorie';
-    }
-    
     if (!termsAccepted) {
       newErrors.terms = 'Trebuie să accepți termenii și condițiile';
     }
@@ -70,56 +66,47 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
-      const existingUsersString = localStorage.getItem('allUsers');
-      const existingUsers = existingUsersString ? JSON.parse(existingUsersString) : [];
-      
-      const existingUser = existingUsers.find((user: any) => user.email === email);
-      
-      if (existingUser) {
-        setErrors({ email: 'Acest email este deja înregistrat' });
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            phone: phone,
+          },
+        },
+      });
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          setErrors({ email: 'Acest email este deja înregistrat' });
+        } else {
+          setErrors({ submit: error.message });
+        }
         return;
       }
 
-      const userData = {
-        name,
-        email,
-        phone,
-        password,
-        investmentExperience,
-        investmentAmount,
-        joinDate: new Date().toISOString().split('T')[0],
-        subscriptionPlan: 'bronze',
-      };
-      
-      // Send data via email (you would integrate with EmailJS or similar service here)
-      const mailtoSubject = encodeURIComponent('Înregistrare nouă - Money4All');
-      const mailtoBody = encodeURIComponent(`
-Înregistrare nouă:
-- Nume: ${name}
-- Email: ${email}  
-- Telefon: ${phone}
-- Experiență investiții: ${investmentExperience}
-- Sumă investiție: ${investmentAmount}
-- Data înregistrării: ${userData.joinDate}
-      `);
-      
-      // Open email client with the data
-      window.open(`mailto:contact@money4all.ro?subject=${mailtoSubject}&body=${mailtoBody}`);
-      
-      existingUsers.push(userData);
-      localStorage.setItem('allUsers', JSON.stringify(existingUsers));
-      
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
       toast("Înregistrare reușită!", {
         description: "Contul tău a fost creat cu succes."
       });
       
       navigate('/login');
+    } catch (error: any) {
+      setErrors({ submit: 'A apărut o eroare la înregistrare. Te rugăm să încerci din nou.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,21 +126,45 @@ const Register = () => {
                 <p className="text-gray-400">Începe călătoria ta de investiții cu Markets4all</p>
               </div>
               
+              {errors.submit && (
+                <div className="bg-red-900/30 border border-red-800 p-3 rounded-md mb-6 text-center">
+                  <p className="text-red-300">{errors.submit}</p>
+                </div>
+              )}
+              
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nume complet</Label>
+                  <Label htmlFor="firstName">Prenume</Label>
                   <div className="relative">
                     <Input 
-                      id="name" 
+                      id="firstName" 
                       type="text" 
-                      placeholder="Ion Popescu" 
+                      placeholder="Ion" 
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      disabled={loading}
                     />
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
-                  {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                  {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Nume</Label>
+                  <div className="relative">
+                    <Input 
+                      id="lastName" 
+                      type="text" 
+                      placeholder="Popescu" 
+                      className="pl-10 bg-gray-800 border-gray-700 text-white"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      disabled={loading}
+                    />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  </div>
+                  {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName}</p>}
                 </div>
                 
                 <div className="space-y-2">
@@ -166,6 +177,7 @@ const Register = () => {
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      disabled={loading}
                     />
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
@@ -182,43 +194,11 @@ const Register = () => {
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
+                      disabled={loading}
                     />
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
                   {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="investment-experience">Experiența în investiții</Label>
-                  <Select value={investmentExperience} onValueChange={setInvestmentExperience}>
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="Selectează nivelul de experiență" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Începător</SelectItem>
-                      <SelectItem value="intermediate">Intermediar</SelectItem>
-                      <SelectItem value="advanced">Avansat</SelectItem>
-                      <SelectItem value="expert">Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.investmentExperience && <p className="text-red-500 text-sm">{errors.investmentExperience}</p>}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="investment-amount">Suma planificată pentru investiție</Label>
-                  <Select value={investmentAmount} onValueChange={setInvestmentAmount}>
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="Selectează suma" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="500-1000">500 - 1.000 RON</SelectItem>
-                      <SelectItem value="1000-5000">1.000 - 5.000 RON</SelectItem>
-                      <SelectItem value="5000-10000">5.000 - 10.000 RON</SelectItem>
-                      <SelectItem value="10000-50000">10.000 - 50.000 RON</SelectItem>
-                      <SelectItem value="50000+">Peste 50.000 RON</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.investmentAmount && <p className="text-red-500 text-sm">{errors.investmentAmount}</p>}
                 </div>
                 
                 <div className="space-y-2">
@@ -231,6 +211,7 @@ const Register = () => {
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      disabled={loading}
                     />
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
@@ -247,6 +228,7 @@ const Register = () => {
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={loading}
                     />
                     <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
@@ -258,6 +240,7 @@ const Register = () => {
                     id="terms" 
                     checked={termsAccepted}
                     onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                    disabled={loading}
                   />
                   <label
                     htmlFor="terms"
@@ -268,8 +251,12 @@ const Register = () => {
                 </div>
                 {errors.terms && <p className="text-red-500 text-sm">{errors.terms}</p>}
                 
-                <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-black">
-                  Creează cont <ArrowRight className="ml-2 h-4 w-4" />
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gold-500 hover:bg-gold-600 text-black"
+                  disabled={loading}
+                >
+                  {loading ? 'Se procesează...' : 'Creează cont'} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
               

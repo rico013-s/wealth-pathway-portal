@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +10,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
   const navigate = useNavigate();
@@ -35,53 +37,49 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
-      // Verificăm dacă există utilizatori în localStorage
-      const allUsersString = localStorage.getItem('allUsers');
-      
-      if (!allUsersString) {
-        setErrors({ login: 'Nu există niciun utilizator înregistrat' });
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrors({ login: 'Email sau parolă incorecte' });
         return;
       }
-      
-      const allUsers = JSON.parse(allUsersString);
-      
-      // Căutăm utilizatorul cu email-ul și parola introduse
-      const foundUser = allUsers.find(
-        (user: any) => user.email === email && user.password === password
-      );
-      
-      if (foundUser) {
-        // Set authentication state
-        localStorage.setItem('isAuthenticated', 'true');
-        
-        // Salvăm datele utilizatorului pentru a le folosi în aplicație
-        localStorage.setItem('userData', JSON.stringify(foundUser));
-        
-        if (rememberMe) {
-          localStorage.setItem('rememberedEmail', email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
-        }
-        
-        // Changed the toast implementation to match the expected API
-        toast("Autentificare reușită", {
-          description: "Bine ai revenit la Markets4all!"
-        });
-        
-        // Redirect to dashboard
-        navigate('/dashboard');
+
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
       } else {
-        setErrors({ login: 'Email sau parolă incorecte' });
+        localStorage.removeItem('rememberedEmail');
       }
+
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userEmail', email);
+
+      toast("Autentificare reușită", {
+        description: "Bine ai revenit la Markets4all!"
+      });
+      
+      navigate('/dashboard');
+    } catch (error: any) {
+      setErrors({ login: 'A apărut o eroare la autentificare. Te rugăm să încerci din nou.' });
+    } finally {
+      setLoading(false);
     }
   };
 
   // Check if there's a remembered email
-  React.useEffect(() => {
+  useEffect(() => {
     const rememberedEmail = localStorage.getItem('rememberedEmail');
     if (rememberedEmail) {
       setEmail(rememberedEmail);
@@ -122,6 +120,7 @@ const Login = () => {
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      disabled={loading}
                     />
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
@@ -143,6 +142,7 @@ const Login = () => {
                       className="pl-10 bg-gray-800 border-gray-700 text-white"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      disabled={loading}
                     />
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   </div>
@@ -154,6 +154,7 @@ const Login = () => {
                     id="remember" 
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    disabled={loading}
                   />
                   <label
                     htmlFor="remember"
@@ -163,8 +164,12 @@ const Login = () => {
                   </label>
                 </div>
                 
-                <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-black">
-                  Autentificare <ArrowRight className="ml-2 h-4 w-4" />
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gold-500 hover:bg-gold-600 text-black"
+                  disabled={loading}
+                >
+                  {loading ? 'Se procesează...' : 'Autentificare'} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
               
