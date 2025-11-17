@@ -11,10 +11,8 @@ import AboutSection from '@/components/AboutSection';
 import Footer from '@/components/Footer';
 import EducationalSection from '@/components/EducationalSection';
 import RecruitmentBanner from '@/components/RecruitmentBanner';
-import { useChatbase } from '@/hooks/useChatbase';
 
 const Index = () => {
-  useChatbase();
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
