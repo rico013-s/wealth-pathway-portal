@@ -13,10 +13,14 @@ import NotFound from "./pages/NotFound";
 import Account from "./pages/Account";
 import Subscriptions from "./pages/Subscriptions";
 import Event from "./pages/Event";
+import { useChatbase } from "@/hooks/useChatbase";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useChatbase();
+  
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -37,6 +41,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
