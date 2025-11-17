@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ThreeBackground from './ThreeBackground';
 
 const HeroSection = () => {
   const [investmentAmount, setInvestmentAmount] = useState('10.000');
@@ -31,8 +31,9 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="bg-black text-white pt-28 pb-20">
-      <div className="container mx-auto px-4">
+    <section className="bg-black text-white pt-28 pb-20 relative overflow-hidden">
+      <ThreeBackground />
+      <div className="container mx-auto px-4 relative z-10">
         <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-10 md:mb-0 animate-fade-in">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
