@@ -1,22 +1,27 @@
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Sphere, MeshDistortMaterial } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
-import { Mesh } from 'three';
+import * as THREE from 'three';
 
 function AnimatedSphere() {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = state.clock.getElapsedTime() * 0.2;
+      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.3;
+    }
+  });
 
   return (
-    <Sphere args={[1, 100, 200]} scale={2.5} ref={meshRef}>
-      <MeshDistortMaterial
+    <mesh ref={meshRef} scale={2.5}>
+      <sphereGeometry args={[1, 32, 32]} />
+      <meshStandardMaterial
         color="#D4AF37"
-        attach="material"
-        distort={0.5}
-        speed={2}
         roughness={0.2}
         metalness={0.8}
+        wireframe
       />
-    </Sphere>
+    </mesh>
   );
 }
 
@@ -28,7 +33,6 @@ const ThreeBackground = () => {
         <directionalLight position={[10, 10, 5]} intensity={1} />
         <pointLight position={[-10, -10, -5]} intensity={0.5} color="#D4AF37" />
         <AnimatedSphere />
-        <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
       </Canvas>
     </div>
   );
