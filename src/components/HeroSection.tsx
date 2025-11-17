@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { ArrowRight, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ThreeBackground from './ThreeBackground';
@@ -8,23 +10,35 @@ const HeroSection = () => {
   const [investmentAmount, setInvestmentAmount] = useState('10.000');
   const [monthlyContribution, setMonthlyContribution] = useState('500');
   const [period, setPeriod] = useState('10');
+  const [interestRate, setInterestRate] = useState('8');
+  const [isCompoundInterest, setIsCompoundInterest] = useState(true);
   const [result, setResult] = useState('110.000+');
 
   const calculateInvestment = () => {
     const initial = parseFloat(investmentAmount.replace(/\./g, '').replace(',', '.'));
     const monthly = parseFloat(monthlyContribution.replace(/\./g, '').replace(',', '.'));
     const years = parseInt(period);
+    const rate = parseFloat(interestRate.replace(',', '.')) / 100;
     
-    if (isNaN(initial) || isNaN(monthly) || isNaN(years)) {
+    if (isNaN(initial) || isNaN(monthly) || isNaN(years) || isNaN(rate)) {
       return;
     }
     
-    // Formulă simplă de calcul compus cu dobândă de 8% anual
-    const annualRate = 0.08;
-    let totalAmount = initial;
+    let totalAmount;
     
-    for (let i = 0; i < years * 12; i++) {
-      totalAmount = totalAmount * (1 + annualRate / 12) + monthly;
+    if (isCompoundInterest) {
+      // Dobândă compusă
+      totalAmount = initial;
+      for (let i = 0; i < years * 12; i++) {
+        totalAmount = totalAmount * (1 + rate / 12) + monthly;
+      }
+    } else {
+      // Dobândă simplă
+      const totalMonths = years * 12;
+      const interestOnInitial = initial * rate * years;
+      const totalContributions = monthly * totalMonths;
+      const interestOnContributions = (monthly * totalMonths * rate * years) / 2;
+      totalAmount = initial + interestOnInitial + totalContributions + interestOnContributions;
     }
     
     setResult(Math.round(totalAmount).toLocaleString('ro-RO') + ' lei');
@@ -91,6 +105,28 @@ const HeroSection = () => {
                       onChange={(e) => setPeriod(e.target.value)}
                       className="w-full border border-gray-700 rounded-md px-4 py-2 bg-gray-800"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Rată dobândă anuală (%)</label>
+                    <input 
+                      type="text" 
+                      value={interestRate} 
+                      onChange={(e) => setInterestRate(e.target.value)}
+                      className="w-full border border-gray-700 rounded-md px-4 py-2 bg-gray-800"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="compound" 
+                      checked={isCompoundInterest}
+                      onCheckedChange={(checked) => setIsCompoundInterest(checked === true)}
+                    />
+                    <Label 
+                      htmlFor="compound" 
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      Dobândă compusă
+                    </Label>
                   </div>
                   <Button 
                     className="w-full bg-gold-500 hover:bg-gold-600 text-black"
