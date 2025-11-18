@@ -1,89 +1,107 @@
-
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BookOpen, Users, Handshake, TrendingUp, GraduationCap, Video, Gamepad2, FileText, UserCheck, UsersRound } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const ComparisonSection = () => {
+  const services = [
+    {
+      title: "Educație Financiară",
+      description: "Program complet de învățare pentru toți nivelurile de experiență",
+      icon: GraduationCap,
+      color: "from-blue-500 to-cyan-500",
+      features: [
+        { icon: BookOpen, text: "Cursuri complete" },
+        { icon: FileText, text: "Lecții interactive" },
+        { icon: GraduationCap, text: "Testări de cunoștințe" },
+        { icon: FileText, text: "Articole specializate" },
+        { icon: Gamepad2, text: "Joc interactiv educațional" }
+      ]
+    },
+    {
+      title: "Mentoring Personalizat",
+      description: "Suport direct de la experți în trading și investiții",
+      icon: Users,
+      color: "from-purple-500 to-pink-500",
+      features: [
+        { icon: UserCheck, text: "Ședințe 1:1 personalizate" },
+        { icon: UsersRound, text: "Sesiuni în echipă" },
+        { icon: Video, text: "Video-uri custom speciale" },
+        { icon: TrendingUp, text: "Trading împreună" }
+      ]
+    },
+    {
+      title: "Consultanță & Parteneri",
+      description: "Alegem împreună cei mai buni parteneri pentru tine",
+      icon: Handshake,
+      color: "from-green-500 to-emerald-500",
+      features: [
+        { icon: Handshake, text: "Parteneri serioși cu reputație" },
+        { icon: FileText, text: "Companii reglementate" },
+        { icon: UserCheck, text: "Consultanță personalizată" },
+        { icon: TrendingUp, text: "Alegere bazată pe obiective" }
+      ]
+    },
+    {
+      title: "Prop Trading Pass",
+      description: "Consultanții noștri trec fazele provocării pentru tine",
+      icon: TrendingUp,
+      color: "from-orange-500 to-red-500",
+      features: [
+        { icon: TrendingUp, text: "Echipă de traderi experți" },
+        { icon: GraduationCap, text: "Strategii dovedite" },
+        { icon: UserCheck, text: "Suport continuu" },
+        { icon: Handshake, text: "Parteneri prop verificați" }
+      ]
+    }
+  ];
+
   return (
-    <section id="comparison" className="py-20 bg-gray-50">
+    <section id="services" className="py-20 bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gradient">Comparație Servicii de Investiții</h2>
-          <p className="text-lg text-navy-600">
-            Compară companiile noastre partenere pentru a găsi serviciul de investiții care se potrivește cel mai bine obiectivelor și circumstanțelor tale financiare.
+          <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">Serviciile Noastre</Badge>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            Servicii Markets4All
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Soluții complete pentru educație, mentoring și succes în trading și investiții
           </p>
         </div>
         
-        <div className="overflow-x-auto rounded-lg shadow">
-          <Table>
-            <TableHeader className="bg-navy-800 text-white">
-              <TableRow>
-                <TableHead className="w-[280px]">Caracteristici</TableHead>
-                <TableHead className="text-center">GlobalWealth Partners</TableHead>
-                <TableHead className="text-center">Frontier Investments</TableHead>
-                <TableHead className="text-center">Heritage Financial</TableHead>
-                <TableHead className="text-center">Apex Capital</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow className="bg-white">
-                <TableCell className="font-medium text-black">Investiție Minimă</TableCell>
-                <TableCell className="text-center text-black">500€</TableCell>
-                <TableCell className="text-center text-black">1.000€</TableCell>
-                <TableCell className="text-center text-black">100€</TableCell>
-                <TableCell className="text-center text-black">10.000€</TableCell>
-              </TableRow>
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-medium text-black">Randament Anual Mediu</TableCell>
-                <TableCell className="text-center text-forest-700 font-medium">12-15%</TableCell>
-                <TableCell className="text-center text-forest-700 font-medium">15-20%</TableCell>
-                <TableCell className="text-center text-forest-700 font-medium">8-10%</TableCell>
-                <TableCell className="text-center text-forest-700 font-medium">18-22%</TableCell>
-              </TableRow>
-              <TableRow className="bg-white">
-                <TableCell className="font-medium text-black">Prietenos cu Începătorii</TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><XCircle className="mx-auto h-5 w-5 text-red-500" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><XCircle className="mx-auto h-5 w-5 text-red-500" /></TableCell>
-              </TableRow>
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-medium text-black">Aplicație Mobilă</TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-              </TableRow>
-              <TableRow className="bg-white">
-                <TableCell className="font-medium text-black">Acțiuni Fracționale</TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><XCircle className="mx-auto h-5 w-5 text-red-500" /></TableCell>
-              </TableRow>
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-medium text-black">Conturi cu Avantaje Fiscale</TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-              </TableRow>
-              <TableRow className="bg-white">
-                <TableCell className="font-medium text-black">Servicii de Consultanță</TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-              </TableRow>
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-medium text-black">Piețe Internaționale</TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-                <TableCell className="text-center"><XCircle className="mx-auto h-5 w-5 text-red-500" /></TableCell>
-                <TableCell className="text-center"><CheckCircle className="mx-auto h-5 w-5 text-forest-600" /></TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {services.map((service, index) => {
+            const Icon = service.icon;
+            return (
+              <Card 
+                key={index} 
+                className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 bg-card/50 backdrop-blur"
+              >
+                <CardHeader>
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${service.color} p-3 mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-full h-full text-white" />
+                  </div>
+                  <CardTitle className="text-2xl mb-2">{service.title}</CardTitle>
+                  <CardDescription className="text-base">{service.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {service.features.map((feature, idx) => {
+                      const FeatureIcon = feature.icon;
+                      return (
+                        <li key={idx} className="flex items-center gap-3 text-foreground/80">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <FeatureIcon className="w-4 h-4 text-primary" />
+                          </div>
+                          <span>{feature.text}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>
