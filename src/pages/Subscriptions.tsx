@@ -55,7 +55,50 @@ const Subscriptions = () => {
             <p className="text-lg text-gray-300">Investește inteligent cu Markets4all. Alege planul care se potrivește nevoilor tale de investiții.</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {/* Planul Bronze */}
+            <Card className={`bg-gray-900 border ${selectedPlan === 'bronze' ? 'border-amber-700' : 'border-gray-800'} hover:border-amber-700 transition-all`}>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-2 rounded-full bg-gray-800 w-16 h-16 flex items-center justify-center">
+                  <Check className="text-amber-700 w-8 h-8" />
+                </div>
+                <CardTitle className="text-2xl font-bold text-gray-200">Plan Bronze</CardTitle>
+                <CardDescription className="text-gray-400">Pentru investitori începători</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center mb-6">
+                  <span className="text-4xl font-bold">99 RON</span>
+                  <span className="text-gray-400 ml-2 block text-sm">plată unică</span>
+                </div>
+                <ul className="space-y-3">
+                  <li className="flex items-center">
+                    <Check className="text-amber-700 mr-2 h-5 w-5" />
+                    <span>Acces la cursuri de bază</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="text-amber-700 mr-2 h-5 w-5" />
+                    <span>Materiale educaționale fundamentale</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="text-amber-700 mr-2 h-5 w-5" />
+                    <span>Suport comunitate</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="text-amber-700 mr-2 h-5 w-5" />
+                    <span>Resurse pentru începători</span>
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => handleSubscribe('bronze', 99)} 
+                  className="w-full bg-amber-700 hover:bg-amber-800 text-white"
+                >
+                  Alege planul Bronze
+                </Button>
+              </CardFooter>
+            </Card>
+
             {/* Planul Silver */}
             <Card className={`bg-gray-900 border ${selectedPlan === 'silver' ? 'border-gray-400' : 'border-gray-800'} hover:border-gray-400 transition-all`}>
               <CardHeader className="text-center">
@@ -63,25 +106,25 @@ const Subscriptions = () => {
                   <Award className="text-gray-400 w-8 h-8" />
                 </div>
                 <CardTitle className="text-2xl font-bold text-gray-200">Plan Silver</CardTitle>
-                <CardDescription className="text-gray-400">Pentru investitori începători</CardDescription>
+                <CardDescription className="text-gray-400">Pentru investitori intermediari</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center mb-6">
-                  <span className="text-4xl font-bold">49,99 RON</span>
-                  <span className="text-gray-400 ml-2">/lună</span>
+                  <span className="text-4xl font-bold">249 RON</span>
+                  <span className="text-gray-400 ml-2 block text-sm">plată unică</span>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-center">
                     <Check className="text-gray-400 mr-2 h-5 w-5" />
-                    <span>Analize de piață de bază</span>
+                    <span>Toate beneficiile planului Bronze</span>
                   </li>
                   <li className="flex items-center">
                     <Check className="text-gray-400 mr-2 h-5 w-5" />
-                    <span>10 alerte de prețuri personalizate</span>
+                    <span>Analize de piață avansate</span>
                   </li>
                   <li className="flex items-center">
                     <Check className="text-gray-400 mr-2 h-5 w-5" />
-                    <span>Rapoarte financiare săptămânale</span>
+                    <span>Strategii de tranzacționare</span>
                   </li>
                   <li className="flex items-center">
                     <Check className="text-gray-400 mr-2 h-5 w-5" />
@@ -91,10 +134,10 @@ const Subscriptions = () => {
               </CardContent>
               <CardFooter>
                 <Button 
-                  onClick={() => handleSubscribe('silver', 49.99)} 
+                  onClick={() => handleSubscribe('silver', 249)} 
                   className="w-full bg-gray-700 hover:bg-gray-600 text-white"
                 >
-                  Abonează-te la planul Silver
+                  Alege planul Silver
                 </Button>
               </CardFooter>
             </Card>
@@ -110,8 +153,8 @@ const Subscriptions = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center mb-6">
-                  <span className="text-4xl font-bold">99,99 RON</span>
-                  <span className="text-gray-400 ml-2">/lună</span>
+                  <span className="text-4xl font-bold">500 RON</span>
+                  <span className="text-gray-400 ml-2 block text-sm">plată unică</span>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-center">
@@ -120,35 +163,35 @@ const Subscriptions = () => {
                   </li>
                   <li className="flex items-center">
                     <Check className="text-gold-500 mr-2 h-5 w-5" />
-                    <span>Analize de piață avansate</span>
+                    <span>Mentoring personalizat 1:1</span>
                   </li>
                   <li className="flex items-center">
                     <Check className="text-gold-500 mr-2 h-5 w-5" />
-                    <span>50 alerte de prețuri personalizate</span>
+                    <span>Video custom made</span>
                   </li>
                   <li className="flex items-center">
                     <Check className="text-gold-500 mr-2 h-5 w-5" />
-                    <span>Rapoarte financiare zilnice</span>
+                    <span>Acces la consultanță premium</span>
                   </li>
                   <li className="flex items-center">
                     <Check className="text-gold-500 mr-2 h-5 w-5" />
-                    <span>Acces la consultanță personalizată</span>
+                    <span>Trading împreună cu experții</span>
                   </li>
                 </ul>
               </CardContent>
               <CardFooter>
                 <Button 
-                  onClick={() => handleSubscribe('gold', 99.99)} 
+                  onClick={() => handleSubscribe('gold', 500)} 
                   className="w-full bg-gold-500 hover:bg-gold-600 text-black"
                 >
-                  Abonează-te la planul Gold
+                  Alege planul Gold
                 </Button>
               </CardFooter>
             </Card>
           </div>
           
           <div className="text-center mt-12 text-gray-400 max-w-2xl mx-auto">
-            <p className="text-sm">* Toate abonamentele pot fi anulate oricând. Taxa pentru planul ales este percepută lunar. Pentru întrebări referitoare la abonamente, contactează echipa noastră de suport.</p>
+            <p className="text-sm">* Toate abonamentele sunt plăți unice și oferă acces pe viață la resursele selectate. Pentru întrebări referitoare la abonamente, contactează echipa noastră de suport.</p>
           </div>
         </div>
       </div>
