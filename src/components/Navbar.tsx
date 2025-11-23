@@ -23,23 +23,7 @@ const Navbar = () => {
         
         <div className="hidden md:flex items-center space-x-8 mx-auto">
           <a href="#services" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Servicii</a>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center text-white hover:text-gold-500 font-medium whitespace-nowrap">
-                Companii
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-black/90 border border-gold-500">
-              <DropdownMenuItem className="text-white hover:text-gold-500 hover:bg-gray-800">
-                <a href="#companies" className="w-full">Partenerii noștri</a>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-white hover:text-gold-500 hover:bg-gray-800">
-                <a href="#comparison" className="w-full">Comparație</a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
+          <a href="#educational" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Învață</a>
           <a href="#about" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Despre noi</a>
           <Link to="/careers" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Cariere</Link>
           <a href="#contact" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Contact</a>
@@ -98,7 +82,7 @@ const Navbar = () => {
         <div className="md:hidden bg-black/95 p-4">
           <div className="flex flex-col space-y-4">
             <a href="#services" className="text-white hover:text-gold-500 font-medium py-2">Servicii</a>
-            <a href="#companies" className="text-white hover:text-gold-500 font-medium py-2">Companii</a>
+            <a href="#educational" className="text-white hover:text-gold-500 font-medium py-2">Învață</a>
             <a href="#about" className="text-white hover:text-gold-500 font-medium py-2">Despre noi</a>
             <Link to="/careers" className="text-white hover:text-gold-500 font-medium py-2">Cariere</Link>
             <a href="#contact" className="text-white hover:text-gold-500 font-medium py-2">Contact</a>
