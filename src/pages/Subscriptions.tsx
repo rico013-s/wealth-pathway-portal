@@ -5,43 +5,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Check, Crown, Award } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { PaymentForm } from '@/components/PaymentForm';
 
 const Subscriptions = () => {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; price: number } | null>(null);
+  const [paymentOpen, setPaymentOpen] = useState(false);
 
-  const handleSubscribe = (plan: string, price: number) => {
-    // În cazul unui site real, aici ar fi integrarea cu un procesor de plăți
-    // Pentru demonstrație, vom simula o abonare reușită
-    
-    // Actualizăm planul utilizatorului în localStorage
-    const userDataString = localStorage.getItem('userData');
-    
-    if (userDataString) {
-      const userData = JSON.parse(userDataString);
-      userData.subscriptionPlan = plan;
-      userData.subscriptionPrice = price;
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      toast({
-        title: "Abonament activat",
-        description: `Ai ales cu succes planul ${plan} la prețul de ${price} RON/lună.`,
-        variant: "default",
-      });
-      
-      // Redirecționează către pagina de cont
-      navigate('/account');
-    } else {
-      toast({
-        title: "Eroare",
-        description: "Nu ești autentificat. Te rugăm să te autentifici și să încerci din nou.",
-        variant: "destructive",
-      });
-      navigate('/login');
-    }
+  const handleSelectPlan = (name: string, price: number) => {
+    setSelectedPlan({ name, price });
+    setPaymentOpen(true);
   };
 
   return (
@@ -57,7 +29,7 @@ const Subscriptions = () => {
           
           <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {/* Planul Bronze */}
-            <Card className={`bg-gray-900 border ${selectedPlan === 'bronze' ? 'border-amber-700' : 'border-gray-800'} hover:border-amber-700 transition-all`}>
+            <Card className={`bg-gray-900 border ${selectedPlan?.name === 'Bronze' ? 'border-amber-700' : 'border-gray-800'} hover:border-amber-700 transition-all`}>
               <CardHeader className="text-center">
                 <div className="mx-auto mb-4 p-2 rounded-full bg-gray-800 w-16 h-16 flex items-center justify-center">
                   <Check className="text-amber-700 w-8 h-8" />
@@ -91,7 +63,7 @@ const Subscriptions = () => {
               </CardContent>
               <CardFooter>
                 <Button 
-                  onClick={() => handleSubscribe('bronze', 99)} 
+                  onClick={() => handleSelectPlan('Bronze', 99)} 
                   className="w-full bg-amber-700 hover:bg-amber-800 text-white"
                 >
                   Alege planul Bronze
@@ -100,7 +72,7 @@ const Subscriptions = () => {
             </Card>
 
             {/* Planul Silver */}
-            <Card className={`bg-gray-900 border ${selectedPlan === 'silver' ? 'border-gray-400' : 'border-gray-800'} hover:border-gray-400 transition-all`}>
+            <Card className={`bg-gray-900 border ${selectedPlan?.name === 'Silver' ? 'border-gray-400' : 'border-gray-800'} hover:border-gray-400 transition-all`}>
               <CardHeader className="text-center">
                 <div className="mx-auto mb-4 p-2 rounded-full bg-gray-800 w-16 h-16 flex items-center justify-center">
                   <Award className="text-gray-400 w-8 h-8" />
@@ -134,7 +106,7 @@ const Subscriptions = () => {
               </CardContent>
               <CardFooter>
                 <Button 
-                  onClick={() => handleSubscribe('silver', 249)} 
+                  onClick={() => handleSelectPlan('Silver', 249)} 
                   className="w-full bg-gray-700 hover:bg-gray-600 text-white"
                 >
                   Alege planul Silver
@@ -143,7 +115,7 @@ const Subscriptions = () => {
             </Card>
             
             {/* Planul Gold */}
-            <Card className={`bg-gray-900 border ${selectedPlan === 'gold' ? 'border-gold-500' : 'border-gray-800'} hover:border-gold-500 transition-all`}>
+            <Card className={`bg-gray-900 border ${selectedPlan?.name === 'Gold' ? 'border-gold-500' : 'border-gray-800'} hover:border-gold-500 transition-all`}>
               <CardHeader className="text-center">
                 <div className="mx-auto mb-4 p-2 rounded-full bg-gray-800 w-16 h-16 flex items-center justify-center">
                   <Crown className="text-gold-500 w-8 h-8" />
@@ -181,7 +153,7 @@ const Subscriptions = () => {
               </CardContent>
               <CardFooter>
                 <Button 
-                  onClick={() => handleSubscribe('gold', 500)} 
+                  onClick={() => handleSelectPlan('Gold', 500)} 
                   className="w-full bg-gold-500 hover:bg-gold-600 text-black"
                 >
                   Alege planul Gold
@@ -197,6 +169,15 @@ const Subscriptions = () => {
       </div>
       
       <Footer />
+
+      {selectedPlan && (
+        <PaymentForm
+          open={paymentOpen}
+          onOpenChange={setPaymentOpen}
+          planName={selectedPlan.name}
+          amount={selectedPlan.price * 100}
+        />
+      )}
     </div>
   );
 };
