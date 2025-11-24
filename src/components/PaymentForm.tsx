@@ -70,16 +70,22 @@ const CheckoutForm = ({ onSuccess, amount: defaultAmount }: { onSuccess: () => v
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="p-4 border border-input rounded-md bg-background">
+      <div className="p-6 border-2 border-input rounded-lg bg-background">
         <CardElement
           options={{
             style: {
               base: {
-                fontSize: '16px',
+                fontSize: '18px',
                 color: 'hsl(var(--foreground))',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontSmoothing: 'antialiased',
                 '::placeholder': {
                   color: 'hsl(var(--muted-foreground))',
                 },
+              },
+              invalid: {
+                color: '#ef4444',
+                iconColor: '#ef4444',
               },
             },
           }}
@@ -100,10 +106,6 @@ const CheckoutForm = ({ onSuccess, amount: defaultAmount }: { onSuccess: () => v
           `Plătește ${(amount / 100).toFixed(2)} RON`
         )}
       </Button>
-
-      <p className="text-xs text-muted-foreground text-center">
-        Test card: 4242 4242 4242 4242, any future date, any CVC
-      </p>
     </form>
   );
 };
