@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ArrowRight, Info } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import ThreeBackground from './ThreeBackground';
+import { PaymentForm } from './PaymentForm';
 
 const HeroSection = () => {
   const [investmentAmount, setInvestmentAmount] = useState('10.000');
@@ -13,6 +13,7 @@ const HeroSection = () => {
   const [interestRate, setInterestRate] = useState('8');
   const [isCompoundInterest, setIsCompoundInterest] = useState(true);
   const [result, setResult] = useState('110.000+');
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   const calculateInvestment = () => {
     const initial = parseFloat(investmentAmount.replace(/\./g, '').replace(',', '.'));
@@ -57,11 +58,13 @@ const HeroSection = () => {
               Markets4all promovează educația financiară și o nouă viziune asupra banilor. Te ajutăm să începi să investești corect, fie că ai 50 de lei sau 50.000.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/register">
-                <Button size="lg" className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-                  Începe să investești <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                className="bg-gold-500 hover:bg-gold-600 text-black font-semibold"
+                onClick={() => setPaymentDialogOpen(true)}
+              >
+                Începe să investești <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
               <a href="#services">
                 <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                   Descoperă serviciile <Info className="ml-2 h-5 w-5" />
@@ -143,6 +146,8 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
+      
+      <PaymentForm open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} />
     </section>
   );
 };
