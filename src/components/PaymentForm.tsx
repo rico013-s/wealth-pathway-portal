@@ -10,12 +10,12 @@ import { Loader2 } from "lucide-react";
 
 const stripePromise = loadStripe("pk_test_51SWnVJBPMc5iRlarWAzXwLd79H4hqDuRoNG7Liz67kOhpyVw44gvMJJr62vYtYh1EUe08hX44faYa0d4kbtxe900ksMmQQhV");
 
-const CheckoutForm = ({ onSuccess }: { onSuccess: () => void }) => {
+const CheckoutForm = ({ onSuccess, amount: defaultAmount }: { onSuccess: () => void; amount: number }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [amount, setAmount] = useState(1000); // Default 100 RON in cents
+  const [amount, setAmount] = useState(defaultAmount);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -70,18 +70,6 @@ const CheckoutForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium mb-2">Sumă investiție (RON)</label>
-        <input
-          type="number"
-          min="10"
-          step="10"
-          value={amount / 100}
-          onChange={(e) => setAmount(Math.max(10, parseFloat(e.target.value)) * 100)}
-          className="w-full px-4 py-2 rounded-md border border-input bg-background"
-        />
-      </div>
-
       <div className="p-4 border border-input rounded-md bg-background">
         <CardElement
           options={{
@@ -123,9 +111,11 @@ const CheckoutForm = ({ onSuccess }: { onSuccess: () => void }) => {
 interface PaymentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  planName: string;
+  amount: number;
 }
 
-export const PaymentForm = ({ open, onOpenChange }: PaymentFormProps) => {
+export const PaymentForm = ({ open, onOpenChange, planName, amount: initialAmount }: PaymentFormProps) => {
   const handleSuccess = () => {
     setTimeout(() => {
       onOpenChange(false);
@@ -136,13 +126,13 @@ export const PaymentForm = ({ open, onOpenChange }: PaymentFormProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Începe să investești</DialogTitle>
+          <DialogTitle>Plan {planName}</DialogTitle>
           <DialogDescription>
-            Introdu detaliile cardului pentru a începe investiția ta
+            Introdu detaliile cardului pentru a finaliza plata
           </DialogDescription>
         </DialogHeader>
         <Elements stripe={stripePromise}>
-          <CheckoutForm onSuccess={handleSuccess} />
+          <CheckoutForm onSuccess={handleSuccess} amount={initialAmount} />
         </Elements>
       </DialogContent>
     </Dialog>

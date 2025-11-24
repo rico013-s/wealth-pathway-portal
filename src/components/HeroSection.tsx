@@ -147,7 +147,12 @@ const HeroSection = () => {
         </div>
       </div>
       
-      <PaymentForm open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} />
+      <PaymentForm 
+        open={paymentDialogOpen} 
+        onOpenChange={setPaymentDialogOpen}
+        planName="Investiție"
+        amount={10000}
+      />
     </section>
   );
 };
