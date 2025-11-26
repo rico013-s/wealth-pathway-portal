@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, BookOpen, Landmark, Coins, BarChart4, LineChart, PieChart, TrendingUp, Bell, Flag } from 'lucide-react';
+import { ArrowRight, BookOpen, Landmark, Coins, BarChart4, LineChart, PieChart, TrendingUp, Bell, Flag, CreditCard, Check } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,7 @@ import MarketChart from '@/components/dashboard/MarketChart';
 import PortfolioTracker from '@/components/dashboard/PortfolioTracker';
 import TaskList from '@/components/dashboard/TaskList';
 import WatchlistSection, { WatchlistItem } from '@/components/dashboard/WatchlistSection';
+import { PaymentForm } from '@/components/PaymentForm';
 
 type FinancialAsset = {
   id: string;
@@ -35,6 +36,8 @@ const Dashboard = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [selectedWatchlistItem, setSelectedWatchlistItem] = useState<WatchlistItem | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; amount: number } | null>(null);
 
   // Display a welcome notification on first load
   useEffect(() => {
@@ -314,6 +317,50 @@ const Dashboard = () => {
     toast.info(`Grafic actualizat pentru ${item.name}`);
   };
 
+  const handleSelectPlan = (name: string, amount: number) => {
+    setSelectedPlan({ name, amount });
+    setPaymentDialogOpen(true);
+  };
+
+  const subscriptionPlans = [
+    {
+      name: 'Bronze',
+      price: 99,
+      description: 'Perfect pentru începători',
+      features: [
+        'Acces la cursuri de bază',
+        'Materiale educaționale fundamentale',
+        'Suport comunitate',
+        'Newsletter săptămânal'
+      ]
+    },
+    {
+      name: 'Silver',
+      price: 249,
+      description: 'Pentru investitori intermediari',
+      features: [
+        'Toate beneficiile Bronze',
+        'Acces la cursuri avansate',
+        'Sesiuni de mentoring grup',
+        'Analize de piață săptămânale',
+        'Webinarii exclusive'
+      ]
+    },
+    {
+      name: 'Gold',
+      price: 500,
+      description: 'Experiența completă',
+      features: [
+        'Toate beneficiile Silver',
+        'Mentoring personalizat 1:1',
+        'Acces prioritar la toate resursele',
+        'Consultanță personalizată',
+        'Certificare Markets4All',
+        'Acces la prop trading'
+      ]
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -400,6 +447,9 @@ const Dashboard = () => {
                   <TabsTrigger value="tracking" className="data-[state=active]:bg-gold-500 data-[state=active]:text-black">
                     Urmărire
                   </TabsTrigger>
+                  <TabsTrigger value="subscription" className="data-[state=active]:bg-gold-500 data-[state=active]:text-black">
+                    Abonamente
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="tasks" className="space-y-6">
@@ -432,6 +482,47 @@ const Dashboard = () => {
                     <PortfolioTracker userTier={userTier} />
                   </div>
                 </TabsContent>
+
+                <TabsContent value="subscription" className="space-y-6">
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-bold mb-2">Alege Planul Tău</h3>
+                    <p className="text-gray-400">Selectează abonamentul potrivit pentru obiectivele tale de investiții</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {subscriptionPlans.map((plan) => (
+                      <Card key={plan.name} className="bg-gray-900 border-gray-800 hover:border-gold-500 transition-all">
+                        <CardHeader>
+                          <div className="flex items-center justify-between mb-2">
+                            <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                            <CreditCard className="h-6 w-6 text-gold-500" />
+                          </div>
+                          <p className="text-gray-400">{plan.description}</p>
+                          <div className="mt-4">
+                            <span className="text-4xl font-bold text-gold-500">{plan.price}</span>
+                            <span className="text-gray-400 ml-2">RON</span>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-3 mb-6">
+                            {plan.features.map((feature, index) => (
+                              <li key={index} className="flex items-start">
+                                <Check className="h-5 w-5 text-gold-500 mr-2 flex-shrink-0 mt-0.5" />
+                                <span className="text-gray-300">{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <Button 
+                            className="w-full bg-gold-500 hover:bg-gold-600 text-black font-bold"
+                            onClick={() => handleSelectPlan(plan.name, plan.price * 100)}
+                          >
+                            Alege planul {plan.name}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
               </Tabs>
 
               <div className="mt-8 text-center">
@@ -443,6 +534,15 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {selectedPlan && (
+        <PaymentForm 
+          open={paymentDialogOpen} 
+          onOpenChange={setPaymentDialogOpen}
+          planName={selectedPlan.name}
+          amount={selectedPlan.amount}
+        />
+      )}
 
       <Footer />
     </div>
