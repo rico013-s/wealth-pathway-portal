@@ -1,324 +1,87 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, BookOpen, Landmark, Coins, BarChart4, LineChart, PieChart, TrendingUp, Bell, Flag, CreditCard, Check } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { 
+  User, 
+  ShoppingCart, 
+  CheckCircle2, 
+  CreditCard, 
+  Bell, 
+  ArrowRight,
+  BookOpen,
+  AlertCircle,
+  FileText,
+  Settings,
+  LogOut
+} from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-// Import dashboard components
-import UserTierBadge, { UserTier } from '@/components/dashboard/UserTierBadge';
-import MarketChart from '@/components/dashboard/MarketChart';
-import PortfolioTracker from '@/components/dashboard/PortfolioTracker';
-import TaskList from '@/components/dashboard/TaskList';
-import WatchlistSection, { WatchlistItem } from '@/components/dashboard/WatchlistSection';
 import { PaymentForm } from '@/components/PaymentForm';
 
-type FinancialAsset = {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  tasks: {
-    id: string;
-    title: string;
-    description: string;
-    completed: boolean;
-    tierRequired: UserTier;
-  }[];
-};
-
 const Dashboard = () => {
-  const [selectedAsset, setSelectedAsset] = useState<string>('');
-  const [userTier, setUserTier] = useState<UserTier>('bronze');
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [selectedWatchlistItem, setSelectedWatchlistItem] = useState<WatchlistItem | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [profileProgress, setProfileProgress] = useState(0);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<{ name: string; amount: number } | null>(null);
 
-  // Display a welcome notification on first load
   useEffect(() => {
-    if (isFirstLoad) {
-      toast("Bine ai venit la Markets4all Dashboard!", {
-        description: "Aici poți urmări activele tale financiare și învăța despre investiții.",
-        icon: <Bell className="h-4 w-4 text-gold-500" />,
-        duration: 5000,
-      });
-      setIsFirstLoad(false);
-    }
-  }, [isFirstLoad]);
+    checkAuth();
+  }, []);
 
-  // Generate chart data based on selected watchlist item
-  useEffect(() => {
-    if (selectedWatchlistItem) {
-      // Generate random data based on the asset name to simulate different patterns
-      let baseValue = 100;
-      let volatility = 0.02;
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       
-      // Adjust base value and volatility based on asset name
-      if (selectedWatchlistItem.name === 'EUR/USD') {
-        baseValue = 1.08;
-        volatility = 0.005;
-      } else if (selectedWatchlistItem.name === 'Aur (XAU)') {
-        baseValue = 2300;
-        volatility = 0.015;
-      } else if (selectedWatchlistItem.name.includes('Apple')) {
-        baseValue = 185;
-        volatility = 0.02;
+      if (!user) {
+        navigate('/login');
+        return;
       }
+
+      setUser(user);
+
+      // Fetch profile data
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
       
-      // Generate data points
-      const data = Array.from({ length: 30 }, (_, i) => {
-        // Create a slightly trending pattern
-        const trend = (i / 30) * 0.05; // 5% trend over 30 days
-        const randomFactor = (Math.random() - 0.5) * volatility;
-        const value = baseValue * (1 + trend + randomFactor);
-        
-        return {
-          name: `Ziua ${i + 1}`,
-          value: parseFloat(value.toFixed(4))
-        };
-      });
-      
-      setChartData(data);
+      setProfile(profileData);
+      calculateProgress(profileData);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast.error('Eroare la încărcarea datelor');
+    } finally {
+      setLoading(false);
     }
-  }, [selectedWatchlistItem]);
-
-  const financialAssets: FinancialAsset[] = [
-    {
-      id: 'forex',
-      name: 'Piața Valutară (Forex)',
-      icon: <LineChart className="h-10 w-10 text-gold-500" />,
-      tasks: [
-        {
-          id: 'forex-1',
-          title: 'Dobânda de Referință',
-          description: 'Învață ce este dobânda de referință și cum afectează cursurile valutare. Dobânda de referință este rata dobânzii stabilită de banca centrală a unei țări și are un impact semnificativ asupra valorii monedei naționale.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'forex-2',
-          title: 'Perechi Valutare Majore',
-          description: 'Identifică perechile valutare majore și caracteristicile lor. Cele mai tranzacționate perechi includ EUR/USD, USD/JPY, GBP/USD și USD/CHF.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'forex-3',
-          title: 'Analiza Tehnică de Bază',
-          description: 'Învață să folosești indicatori tehnici de bază precum mediile mobile, RSI și MACD pentru a identifica tendințele pieței valutare.',
-          completed: false,
-          tierRequired: 'silver'
-        },
-        {
-          id: 'forex-4',
-          title: 'Strategii de Tranzacționare Avansate',
-          description: 'Descoperă strategii de tranzacționare avansate pentru forex incluzând scalping, swing trading și position trading.',
-          completed: false,
-          tierRequired: 'gold'
-        },
-      ],
-    },
-    {
-      id: 'commodities',
-      name: 'Mărfuri',
-      icon: <Coins className="h-10 w-10 text-gold-500" />,
-      tasks: [
-        {
-          id: 'commodities-1',
-          title: 'Tipuri de Mărfuri',
-          description: 'Învață despre diferitele tipuri de mărfuri: metale prețioase (aur, argint), energie (petrol, gaz natural), agricole (grâu, porumb, cafea) și cum se tranzacționează fiecare.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'commodities-2',
-          title: 'Factorii de Influență',
-          description: 'Identifică factorii principali care influențează prețurile mărfurilor: cerere și ofertă, condiții meteorologice, politici guvernamentale, valoarea dolarului și stocurile globale.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'commodities-3',
-          title: 'Modalități de Investiție',
-          description: 'Explorează diferitele modalități de a investi în mărfuri: contracte futures, ETF-uri specializate pe mărfuri, acțiuni ale companiilor producătoare și fonduri mutuale.',
-          completed: false,
-          tierRequired: 'silver'
-        },
-        {
-          id: 'commodities-4',
-          title: 'Strategii de Hedging',
-          description: 'Învață cum să folosești mărfurile pentru a proteja portofoliul tău împotriva inflației și a volatilității pieței.',
-          completed: false,
-          tierRequired: 'gold'
-        },
-      ],
-    },
-    {
-      id: 'stocks',
-      name: 'Acțiuni',
-      icon: <TrendingUp className="h-10 w-10 text-gold-500" />,
-      tasks: [
-        {
-          id: 'stocks-1',
-          title: 'Raportul P/E',
-          description: 'Învață să calculezi și să interpretezi raportul preț/câștig (P/E) al unei companii. Acest indicator fundamental ajută la evaluarea valorii acțiunilor.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'stocks-2',
-          title: 'Dividende',
-          description: 'Înțelege conceptul de dividend yield și cum să evaluezi companiile care plătesc dividende în mod constant.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'stocks-3',
-          title: 'Analiza Sectorială',
-          description: 'Învață să analizezi performanța diferitelor sectoare economice și cum acestea sunt influențate de ciclurile economice.',
-          completed: false,
-          tierRequired: 'silver'
-        },
-        {
-          id: 'stocks-4',
-          title: 'Strategii de Construire a Portofoliului',
-          description: 'Dezvoltă strategii avansate pentru construirea unui portofoliu diversificat de acțiuni în funcție de profilul tău de risc și obiectivele financiare.',
-          completed: false,
-          tierRequired: 'gold'
-        },
-      ],
-    },
-    {
-      id: 'etf-indices',
-      name: 'ETF-uri și Indici',
-      icon: <BarChart4 className="h-10 w-10 text-gold-500" />,
-      tasks: [
-        {
-          id: 'etf-1',
-          title: 'Structura unui ETF',
-          description: 'Înțelege cum sunt structurate fondurile tranzacționate la bursă (ETF) și avantajele lor comparativ cu fondurile mutuale tradiționale: lichiditate, costuri reduse și diversificare.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'etf-2',
-          title: 'Indici Globali',
-          description: 'Cunoaște principalii indici bursieri globali (S&P 500, NASDAQ, FTSE 100, DAX, Nikkei) și ce reprezintă aceștia. Înțelege cum poți investi în acești indici prin ETF-uri.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'etf-3',
-          title: 'ETF-uri Tematice',
-          description: 'Explorează ETF-urile tematice care se concentrează pe sectoare specifice precum tehnologie, energie verde sau inteligență artificială și cum pot fi folosite pentru a investi în tendințe emergente.',
-          completed: false,
-          tierRequired: 'silver'
-        },
-        {
-          id: 'etf-4',
-          title: 'ETF-uri cu Efect de Levier',
-          description: 'Învață despre ETF-urile cu efect de levier și ETF-urile inverse, cum funcționează și riscurile asociate cu acestea.',
-          completed: false,
-          tierRequired: 'gold'
-        },
-      ],
-    },
-    {
-      id: 'funds',
-      name: 'Fonduri de Investiții',
-      icon: <PieChart className="h-10 w-10 text-gold-500" />,
-      tasks: [
-        {
-          id: 'funds-1',
-          title: 'Tipuri de Fonduri',
-          description: 'Învață diferențele dintre fondurile mutuale, ETF-uri, fonduri de pensii și fonduri hedge. Fiecare tip are caracteristici, riscuri și potențiale beneficii distincte.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'funds-2',
-          title: 'Evaluarea Performanței',
-          description: 'Învață să evaluezi performanța unui fond de investiții folosind indicatori precum CAGR (rata anuală compusă de creștere) și raportul Sharpe.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'funds-3',
-          title: 'Diversificarea Portofoliului',
-          description: 'Înțelege importanța diversificării și cum să construiești un portofoliu de fonduri de investiții echilibrat în funcție de obiectivele tale financiare.',
-          completed: false,
-          tierRequired: 'silver'
-        },
-        {
-          id: 'funds-4',
-          title: 'Analiza Alocării de Active',
-          description: 'Învață tehnici avansate pentru alocarea activelor între diferite clase de active și fonduri de investiții pentru a maximiza rentabilitatea ajustată la risc.',
-          completed: false,
-          tierRequired: 'gold'
-        },
-      ],
-    },
-    {
-      id: 'crypto',
-      name: 'Criptomonede',
-      icon: <Landmark className="h-10 w-10 text-gold-500" />,
-      tasks: [
-        {
-          id: 'crypto-1',
-          title: 'Tehnologia Blockchain',
-          description: 'Învață bazele tehnologiei blockchain și cum aceasta stă la baza majorității criptomonedelor. Înțelege concepte precum descentralizare, consens și criptografie.',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'crypto-2',
-          title: 'Market Cap și Tokenomics',
-          description: 'Înțelege cum să analizezi capitalizarea de piață a unei criptomonede și importanța tokenomics-ului (distribuția, inflația și utilitatea token-urilor).',
-          completed: false,
-          tierRequired: 'bronze'
-        },
-        {
-          id: 'crypto-3',
-          title: 'Riscuri și Reglementări',
-          description: 'Fii la curent cu riscurile specifice investițiilor în criptomonede și evoluția cadrului de reglementare în diferite jurisdicții.',
-          completed: false,
-          tierRequired: 'silver'
-        },
-        {
-          id: 'crypto-4',
-          title: 'DeFi și NFT-uri',
-          description: 'Explorează ecosistemul DeFi (Finanțe Descentralizate) și piața NFT-urilor (Token-uri Nefungibile), cum funcționează și oportunitățile pe care le oferă.',
-          completed: false,
-          tierRequired: 'gold'
-        },
-      ],
-    },
-  ];
-
-  const selectedAssetData = financialAssets.find(asset => asset.id === selectedAsset);
-
-  const handleChangeTier = (newTier: UserTier) => {
-    setUserTier(newTier);
-    toast.success(`Contul tău a fost actualizat la nivelul ${newTier.charAt(0).toUpperCase() + newTier.slice(1)}`);
   };
 
-  const handleTaskComplete = (taskId: string) => {
-    // In a real app, this would update the database
-    console.log(`Task ${taskId} completed`);
+  const calculateProgress = (profileData: any) => {
+    let progress = 0;
+    const fields = ['first_name', 'last_name', 'email', 'phone'];
+    const filledFields = fields.filter(field => profileData?.[field] && profileData[field].trim() !== '');
+    progress = (filledFields.length / fields.length) * 100;
+    setProfileProgress(progress);
   };
 
-  const handleWatchlistItemSelect = (item: WatchlistItem) => {
-    setSelectedWatchlistItem(item);
-    toast.info(`Grafic actualizat pentru ${item.name}`);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+    toast.success('Deconectare reușită');
   };
 
-  const handleSelectPlan = (name: string, amount: number) => {
-    setSelectedPlan({ name, amount });
+  const handleSelectPlan = (name: string, price: number) => {
+    setSelectedPlan({ name, amount: price * 100 });
     setPaymentDialogOpen(true);
   };
 
@@ -327,212 +90,257 @@ const Dashboard = () => {
       name: 'Bronze',
       price: 99,
       description: 'Perfect pentru începători',
-      features: [
-        'Acces la cursuri de bază',
-        'Materiale educaționale fundamentale',
-        'Suport comunitate',
-        'Newsletter săptămânal'
-      ]
+      features: ['Acces la cursuri de bază', 'Materiale educaționale', 'Suport comunitate']
     },
     {
       name: 'Silver',
       price: 249,
       description: 'Pentru investitori intermediari',
-      features: [
-        'Toate beneficiile Bronze',
-        'Acces la cursuri avansate',
-        'Sesiuni de mentoring grup',
-        'Analize de piață săptămânale',
-        'Webinarii exclusive'
-      ]
+      features: ['Toate beneficiile Bronze', 'Cursuri avansate', 'Sesiuni mentoring grup']
     },
     {
       name: 'Gold',
       price: 500,
       description: 'Experiența completă',
-      features: [
-        'Toate beneficiile Silver',
-        'Mentoring personalizat 1:1',
-        'Acces prioritar la toate resursele',
-        'Consultanță personalizată',
-        'Certificare Markets4All',
-        'Acces la prop trading'
-      ]
+      features: ['Toate beneficiile Silver', 'Mentoring 1:1', 'Consultanță personalizată']
     }
   ];
+
+  const recommendedActions = [
+    {
+      title: 'Completează-ți profilul',
+      description: 'Adaugă toate informațiile necesare pentru experiență personalizată',
+      completed: profileProgress === 100,
+      action: () => navigate('/account'),
+      icon: User
+    },
+    {
+      title: 'Alege un plan de abonament',
+      description: 'Începe călătoria ta în educație financiară',
+      completed: false,
+      action: () => document.getElementById('cursuri')?.scrollIntoView({ behavior: 'smooth' }),
+      icon: ShoppingCart
+    },
+    {
+      title: 'Explorează cursurile disponibile',
+      description: 'Descoperă materialeledidactice pregătite pentru tine',
+      completed: false,
+      action: () => document.getElementById('cursuri')?.scrollIntoView({ behavior: 'smooth' }),
+      icon: BookOpen
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
 
-      <div className="flex-grow pt-20 pb-10 px-4 container mx-auto">
-        <div className="relative">
-          <div className="absolute -left-20 -top-20 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl"></div>
-
-          <div className="bg-gray-900 border border-gray-800 p-8 rounded-xl shadow-xl relative z-10 mb-10">
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold">Bine ai venit la Markets<span className="text-gold-500">4all</span>!</h1>
-                <UserTierBadge tier={userTier} />
-              </div>
-              <p className="text-gray-400">Platformă educațională pentru dezvoltarea abilităților tale de investiții</p>
-              
-              {/* Language selection */}
-              <div className="absolute top-8 right-8 flex items-center gap-2">
-                <Button variant="outline" size="sm" className="flex items-center gap-1 border-gray-700">
-                  <Flag className="h-4 w-4" />
-                  <span>Română</span>
-                </Button>
-              </div>
-              
-              {/* For demo purposes only - tier switcher */}
-              <div className="mt-4 flex gap-2 justify-center">
-                <Button 
-                  variant={userTier === 'bronze' ? 'default' : 'outline'} 
-                  onClick={() => handleChangeTier('bronze')}
-                  className={userTier === 'bronze' ? 'bg-amber-700' : ''}
-                >
-                  Bronze
-                </Button>
-                <Button 
-                  variant={userTier === 'silver' ? 'default' : 'outline'} 
-                  onClick={() => handleChangeTier('silver')}
-                  className={userTier === 'silver' ? 'bg-gray-400' : ''}
-                >
-                  Silver
-                </Button>
-                <Button 
-                  variant={userTier === 'gold' ? 'default' : 'outline'} 
-                  onClick={() => handleChangeTier('gold')}
-                  className={userTier === 'gold' ? 'bg-gold-500' : ''}
-                >
-                  Gold
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Selectează nivelul pentru demo</p>
+      <div className="flex-grow pt-20 pb-10 px-4 container mx-auto max-w-7xl">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                Bine ai venit, {profile?.first_name || 'Investitor'}! 👋
+              </h1>
+              <p className="text-gray-400">Gestionează-ți educația financiară și investițiile dintr-un singur loc</p>
             </div>
-
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Selectează activul financiar pe care îl deții sau te interesează:</h2>
-                <Select value={selectedAsset} onValueChange={setSelectedAsset}>
-                  <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-white">
-                    <SelectValue placeholder="Alege un activ financiar" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                    {financialAssets.map((asset) => (
-                      <SelectItem key={asset.id} value={asset.id} className="hover:bg-gray-700">
-                        {asset.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <Button variant="outline" onClick={handleLogout} className="border-gray-700">
+              <LogOut className="h-4 w-4 mr-2" />
+              Deconectare
+            </Button>
           </div>
 
-          {selectedAssetData && (
-            <div className="space-y-8">
-              <div className="flex items-center space-x-4 mb-6">
-                {selectedAssetData.icon}
-                <h2 className="text-2xl font-bold">{selectedAssetData.name}</h2>
+          {/* Progress Card */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-lg font-semibold">Progresul tău</h3>
+                  <p className="text-sm text-gray-400">Completează-ți profilul pentru experiență optimă</p>
+                </div>
+                <span className="text-2xl font-bold text-gold-500">{profileProgress}%</span>
               </div>
+              <Progress value={profileProgress} className="h-2" />
+            </CardContent>
+          </Card>
+        </div>
 
-              <Tabs defaultValue="tasks" className="w-full">
-                <TabsList className="bg-gray-800 border-gray-700 mb-6">
-                  <TabsTrigger value="tasks" className="data-[state=active]:bg-gold-500 data-[state=active]:text-black">
-                    Educație
-                  </TabsTrigger>
-                  <TabsTrigger value="tracking" className="data-[state=active]:bg-gold-500 data-[state=active]:text-black">
-                    Urmărire
-                  </TabsTrigger>
-                  <TabsTrigger value="subscription" className="data-[state=active]:bg-gold-500 data-[state=active]:text-black">
-                    Abonamente
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="tasks" className="space-y-6">
-                  <h3 className="text-xl font-semibold mb-4">Sarcini educaționale:</h3>
-                  <TaskList 
-                    tasks={selectedAssetData.tasks} 
-                    userTier={userTier}
-                    onTaskComplete={handleTaskComplete}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="tracking" className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Chart - now uses data from selected watchlist item */}
-                    <MarketChart 
-                      assetName={selectedWatchlistItem ? selectedWatchlistItem.name : selectedAssetData.name} 
-                      assetType={selectedWatchlistItem ? "Cotație live" : "Prețuri ultimele 30 zile"}
-                      data={chartData.length > 0 ? chartData : undefined}
-                    />
-                    
-                    {/* Watchlist - now with selection capability */}
-                    <WatchlistSection 
-                      userTier={userTier}
-                      onSelectAsset={handleWatchlistItemSelect}
-                      selectedAssetId={selectedWatchlistItem?.id}
-                    />
-                  </div>
-                  
-                  <div className="mt-6">
-                    <PortfolioTracker userTier={userTier} />
-                  </div>
-                </TabsContent>
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Profil Card */}
+          <Card className="bg-gray-900 border-gray-800 hover:border-gold-500 transition-all cursor-pointer" onClick={() => navigate('/account')}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-gold-500" />
+                  Profil
+                </CardTitle>
+                <ArrowRight className="h-5 w-5 text-gray-400" />
+              </div>
+              <CardDescription>Date personale și preferințe</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-300">• Completare profil: {profileProgress}%</p>
+                <p className="text-gray-300">• Email: {profile?.email}</p>
+                <p className="text-gray-300">• Telefon: {profile?.phone || 'Necompletat'}</p>
+              </div>
+            </CardContent>
+          </Card>
 
-                <TabsContent value="subscription" className="space-y-6">
-                  <div className="mb-8">
-                    <h3 className="text-2xl font-bold mb-2">Alege Planul Tău</h3>
-                    <p className="text-gray-400">Selectează abonamentul potrivit pentru obiectivele tale de investiții</p>
-                  </div>
+          {/* Plăți & Facturi Card */}
+          <Card className="bg-gray-900 border-gray-800 hover:border-gold-500 transition-all">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-gold-500" />
+                  Plăți & Facturi
+                </CardTitle>
+              </div>
+              <CardDescription>Gestionează plățile tale</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                  <span className="text-sm">Abonament activ</span>
+                  <Badge variant="outline" className="border-red-500 text-red-500">Inactiv</Badge>
+                </div>
+                <Button className="w-full bg-gold-500 hover:bg-gold-600 text-black" onClick={() => document.getElementById('cursuri')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Activează abonament
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {subscriptionPlans.map((plan) => (
-                      <Card key={plan.name} className="bg-gray-900 border-gray-800 hover:border-gold-500 transition-all">
-                        <CardHeader>
-                          <div className="flex items-center justify-between mb-2">
-                            <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                            <CreditCard className="h-6 w-6 text-gold-500" />
-                          </div>
-                          <p className="text-gray-400">{plan.description}</p>
-                          <div className="mt-4">
-                            <span className="text-4xl font-bold text-gold-500">{plan.price}</span>
-                            <span className="text-gray-400 ml-2">RON</span>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <ul className="space-y-3 mb-6">
-                            {plan.features.map((feature, index) => (
-                              <li key={index} className="flex items-start">
-                                <Check className="h-5 w-5 text-gold-500 mr-2 flex-shrink-0 mt-0.5" />
-                                <span className="text-gray-300">{feature}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          <Button 
-                            className="w-full bg-gold-500 hover:bg-gold-600 text-black font-bold"
-                            onClick={() => handleSelectPlan(plan.name, plan.price * 100)}
-                          >
-                            Alege planul {plan.name}
-                          </Button>
-                        </CardContent>
-                      </Card>
+          {/* Mesaje & Notificări Card */}
+          <Card className="bg-gray-900 border-gray-800 hover:border-gold-500 transition-all">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-gold-500" />
+                  Mesaje & Notificări
+                </CardTitle>
+                <Badge className="bg-gold-500 text-black">3 noi</Badge>
+              </div>
+              <CardDescription>Informații importante</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="p-3 bg-gray-800 rounded-lg">
+                  <p className="text-sm font-medium">Bine ai venit! 🎉</p>
+                  <p className="text-xs text-gray-400">Explorează cursurile disponibile</p>
+                </div>
+                <div className="p-3 bg-gray-800 rounded-lg">
+                  <p className="text-sm font-medium">Ofertă specială</p>
+                  <p className="text-xs text-gray-400">20% reducere la primul abonament</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Acțiuni Recomandate */}
+        <Card className="bg-gray-900 border-gray-800 mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-gold-500" />
+              Acțiuni Recomandate
+            </CardTitle>
+            <CardDescription>Pași pentru a obține cea mai bună experiență</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {recommendedActions.map((action, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between p-4 rounded-lg border ${
+                    action.completed 
+                      ? 'bg-green-900/20 border-green-500/30' 
+                      : 'bg-gray-800 border-gray-700 hover:border-gold-500 cursor-pointer'
+                  } transition-all`}
+                  onClick={() => !action.completed && action.action()}
+                >
+                  <div className="flex items-start gap-3">
+                    <action.icon className={`h-5 w-5 mt-0.5 ${action.completed ? 'text-green-500' : 'text-gold-500'}`} />
+                    <div>
+                      <h4 className="font-medium">{action.title}</h4>
+                      <p className="text-sm text-gray-400">{action.description}</p>
+                    </div>
+                  </div>
+                  {action.completed ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <ArrowRight className="h-5 w-5 text-gray-400" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Cursuri & Produse Section */}
+        <div id="cursuri">
+          <h2 className="text-2xl font-bold mb-6">Cursuri & Produse Disponibile</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {subscriptionPlans.map((plan) => (
+              <Card key={plan.name} className="bg-gray-900 border-gray-800 hover:border-gold-500 transition-all">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-2">
+                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <ShoppingCart className="h-6 w-6 text-gold-500" />
+                  </div>
+                  <CardDescription>{plan.description}</CardDescription>
+                  <div className="mt-4">
+                    <span className="text-4xl font-bold text-gold-500">{plan.price}</span>
+                    <span className="text-gray-400 ml-2">RON</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 mb-6">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-gold-500 mr-2 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-300">{feature}</span>
+                      </li>
                     ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  </ul>
+                  <Button 
+                    className="w-full bg-gold-500 hover:bg-gold-600 text-black font-bold"
+                    onClick={() => handleSelectPlan(plan.name, plan.price)}
+                  >
+                    Cumpără acum
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
 
-              <div className="mt-8 text-center">
-                <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-                  Solicită materiale personalizate <ArrowRight className="ml-2 h-4 w-4" />
+        {/* Info Section */}
+        <Card className="bg-gray-900 border-gray-800 mt-8">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-gold-500 mt-0.5" />
+              <div>
+                <h4 className="font-medium mb-1">Ai nevoie de ajutor?</h4>
+                <p className="text-sm text-gray-400 mb-3">
+                  Echipa noastră este gata să te ajute cu orice întrebări legate de investiții sau educație financiară.
+                </p>
+                <Button variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
+                  Contactează-ne
                 </Button>
               </div>
             </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {selectedPlan && (
