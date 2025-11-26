@@ -108,9 +108,9 @@ const ServicesSection = () => {
                   <Button 
                     variant="default" 
                     className="w-full"
-                    onClick={() => navigate('/subscriptions')}
+                    onClick={() => navigate('/register')}
                   >
-                    Accesează Serviciul
+                    Începe Acum
                   </Button>
                 </div>
               </CardContent>
