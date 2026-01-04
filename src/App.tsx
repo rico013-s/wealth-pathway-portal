@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,11 @@ import NotFound from "./pages/NotFound";
 import Account from "./pages/Account";
 import Subscriptions from "./pages/Subscriptions";
 import Event from "./pages/Event";
+import Educatie from "./pages/Educatie";
+import Servicii from "./pages/Servicii";
+import Consultanta from "./pages/Consultanta";
+import DespreNoi from "./pages/DespreNoi";
+import Resurse from "./pages/Resurse";
 import { useChatbase } from "@/hooks/useChatbase";
 
 const queryClient = new QueryClient();
@@ -35,6 +39,11 @@ const App = () => {
           <Route path="/account" element={<Account />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/event" element={<Event />} />
+          <Route path="/educatie" element={<Educatie />} />
+          <Route path="/servicii" element={<Servicii />} />
+          <Route path="/consultanta" element={<Consultanta />} />
+          <Route path="/despre-noi" element={<DespreNoi />} />
+          <Route path="/resurse" element={<Resurse />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

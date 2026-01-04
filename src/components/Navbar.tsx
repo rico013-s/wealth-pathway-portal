@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Phone, Mail, ChevronDown } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +9,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const navLinks = [
+  { href: '/servicii', label: 'Servicii' },
+  { href: '/educatie', label: 'Educație' },
+  { href: '/consultanta', label: 'Consultanță' },
+  { href: '/despre-noi', label: 'Despre Noi' },
+  { href: '/careers', label: 'Cariere' },
+];
+
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <nav className="w-full bg-black/90 backdrop-blur-sm fixed top-0 z-50 shadow-sm">
@@ -21,12 +32,20 @@ const Navbar = () => {
           </Link>
         </div>
         
-        <div className="hidden md:flex items-center space-x-8 mx-auto">
-          <a href="#services" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Servicii</a>
-          <a href="#educational" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Învață</a>
-          <a href="#about" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Despre noi</a>
-          <Link to="/careers" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Cariere</Link>
-          <a href="#contact" className="text-white hover:text-gold-500 font-medium whitespace-nowrap">Contact</a>
+        <div className="hidden md:flex items-center space-x-6 mx-auto">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.href}
+              to={link.href} 
+              className={`font-medium whitespace-nowrap transition-colors ${
+                isActive(link.href) 
+                  ? 'text-gold-500' 
+                  : 'text-white hover:text-gold-500'
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
         
         <div className="hidden md:flex items-center gap-3">
@@ -50,7 +69,7 @@ const Navbar = () => {
               <DropdownMenuItem className="text-white hover:text-gold-500 hover:bg-gray-800">
                 <a href="tel:0740113111" className="flex items-center w-full">
                   <Phone className="mr-2 h-4 w-4" />
-                  0740113111
+                  0740 113 111
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem className="text-white hover:text-gold-500 hover:bg-gray-800">
@@ -81,19 +100,28 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-black/95 p-4">
           <div className="flex flex-col space-y-4">
-            <a href="#services" className="text-white hover:text-gold-500 font-medium py-2">Servicii</a>
-            <a href="#educational" className="text-white hover:text-gold-500 font-medium py-2">Învață</a>
-            <a href="#about" className="text-white hover:text-gold-500 font-medium py-2">Despre noi</a>
-            <Link to="/careers" className="text-white hover:text-gold-500 font-medium py-2">Cariere</Link>
-            <a href="#contact" className="text-white hover:text-gold-500 font-medium py-2">Contact</a>
+            {navLinks.map((link) => (
+              <Link 
+                key={link.href}
+                to={link.href} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`font-medium py-2 transition-colors ${
+                  isActive(link.href) 
+                    ? 'text-gold-500' 
+                    : 'text-white hover:text-gold-500'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
             
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
-              <Link to="/login" className="w-full">
+              <Link to="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button variant="outline" className="w-full border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
                   Autentificare
                 </Button>
               </Link>
-              <Link to="/register" className="w-full">
+              <Link to="/register" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button className="w-full bg-gold-500 hover:bg-gold-600 text-black font-semibold">
                   Înregistrare
                 </Button>
@@ -103,7 +131,7 @@ const Navbar = () => {
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
               <a href="tel:0740113111" className="flex items-center text-white hover:text-gold-500 font-medium py-2">
                 <Phone className="mr-2 h-4 w-4" />
-                0740113111
+                0740 113 111
               </a>
               <a href="mailto:markets4allro@gmail.com" className="flex items-center text-white hover:text-gold-500 font-medium py-2">
                 <Mail className="mr-2 h-4 w-4" />
