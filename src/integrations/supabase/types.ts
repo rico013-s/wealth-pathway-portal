@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      consultation_requests: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          goals: string | null
+          id: string
+          last_name: string
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          goals?: string | null
+          id?: string
+          last_name: string
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          goals?: string | null
+          id?: string
+          last_name?: string
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
