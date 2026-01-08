@@ -12,6 +12,7 @@ import {
   Phone, Mail
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const steps = [
   {
@@ -68,7 +69,9 @@ const Consultanta = () => {
     goals: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email || !form.firstName || !form.lastName) {
       toast({
@@ -79,21 +82,43 @@ const Consultanta = () => {
       return;
     }
 
-    const mailtoLink = `mailto:contact@markets4all.ro?subject=Solicitare consultanță - ${form.firstName} ${form.lastName}&body=Nume: ${form.firstName} ${form.lastName}%0D%0AEmail: ${form.email}%0D%0ATelefon: ${form.phone}%0D%0AObiecte investiții: ${form.goals}`;
-    window.open(mailtoLink);
+    setIsSubmitting(true);
     
-    toast({
-      title: "Solicitare trimisă!",
-      description: "Te vom contacta în curând pentru programarea consultanței."
-    });
-    
-    setForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      goals: '',
-    });
+    try {
+      const { error } = await supabase
+        .from('consultation_requests')
+        .insert({
+          first_name: form.firstName,
+          last_name: form.lastName,
+          email: form.email,
+          phone: form.phone || null,
+          goals: form.goals || null,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Solicitare trimisă!",
+        description: "Te vom contacta în curând pentru programarea consultanței."
+      });
+      
+      setForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        goals: '',
+      });
+    } catch (error) {
+      console.error('Error submitting consultation request:', error);
+      toast({
+        variant: "destructive",
+        title: "Eroare",
+        description: "A apărut o eroare. Te rugăm să încerci din nou."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -191,8 +216,8 @@ const Consultanta = () => {
                     onChange={(e) => setForm({...form, goals: e.target.value})}
                     rows={4}
                   />
-                  <Button type="submit" className="w-full" size="lg">
-                    Trimite Solicitarea <ArrowRight className="ml-2 w-5 h-5" />
+                  <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                    {isSubmitting ? 'Se trimite...' : 'Trimite Solicitarea'} <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </form>
               </CardContent>
