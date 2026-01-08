@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, Mail, ChevronDown } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Phone, Mail, User, LogOut, CreditCard, BookOpen } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from '@/integrations/supabase/client';
 
 const navLinks = [
   { href: '/servicii', label: 'Servicii' },
@@ -19,7 +21,28 @@ const navLinks = [
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -49,16 +72,56 @@ const Navbar = () => {
         </div>
         
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/login">
-            <Button variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
-              Autentificare
-            </Button>
-          </Link>
-          <Link to="/register">
-            <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-              Înregistrare
-            </Button>
-          </Link>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-black/95 border border-gold-500 min-w-[180px]">
+                <DropdownMenuItem asChild className="text-white hover:text-gold-500 hover:bg-gray-800 cursor-pointer">
+                  <Link to="/account" className="flex items-center w-full">
+                    <User className="mr-2 h-4 w-4" />
+                    Contul meu
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="text-white hover:text-gold-500 hover:bg-gray-800 cursor-pointer">
+                  <Link to="/subscriptions" className="flex items-center w-full">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Abonamentul tău
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="text-white hover:text-gold-500 hover:bg-gray-800 cursor-pointer">
+                  <Link to="/educatie" className="flex items-center w-full">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Materiale
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  className="text-white hover:text-gold-500 hover:bg-gray-800 cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Deconectare
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="outline" className="border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
+                  Autentificare
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button className="bg-gold-500 hover:bg-gold-600 text-black font-semibold">
+                  Înregistrare
+                </Button>
+              </Link>
+            </>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="text-white hover:text-gold-500">
@@ -116,16 +179,42 @@ const Navbar = () => {
             ))}
             
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
-              <Link to="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
-                  Autentificare
-                </Button>
-              </Link>
-              <Link to="/register" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button className="w-full bg-gold-500 hover:bg-gold-600 text-black font-semibold">
-                  Înregistrare
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link to="/account" className="flex items-center text-white hover:text-gold-500 font-medium py-2" onClick={() => setIsMobileMenuOpen(false)}>
+                    <User className="mr-2 h-4 w-4" />
+                    Contul meu
+                  </Link>
+                  <Link to="/subscriptions" className="flex items-center text-white hover:text-gold-500 font-medium py-2" onClick={() => setIsMobileMenuOpen(false)}>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Abonamentul tău
+                  </Link>
+                  <Link to="/educatie" className="flex items-center text-white hover:text-gold-500 font-medium py-2" onClick={() => setIsMobileMenuOpen(false)}>
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Materiale
+                  </Link>
+                  <button 
+                    onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                    className="flex items-center text-white hover:text-gold-500 font-medium py-2"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Deconectare
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-black">
+                      Autentificare
+                    </Button>
+                  </Link>
+                  <Link to="/register" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full bg-gold-500 hover:bg-gold-600 text-black font-semibold">
+                      Înregistrare
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             <div className="flex flex-col space-y-2 pt-2 border-t border-gray-800">
