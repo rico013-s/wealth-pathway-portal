@@ -126,7 +126,7 @@ export const PaymentForm = ({ open, onOpenChange, planName, amount: initialAmoun
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-white text-gray-900">
         <DialogHeader>
           <DialogTitle>Plan {planName}</DialogTitle>
           <DialogDescription>
