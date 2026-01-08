@@ -70,7 +70,7 @@ const CheckoutForm = ({ onSuccess, amount: defaultAmount }: { onSuccess: () => v
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="p-6 border-2 border-input rounded-lg bg-background">
+      <div className="p-6 border-2 border-input rounded-lg bg-white">
         <CardElement
           options={{
             style: {
