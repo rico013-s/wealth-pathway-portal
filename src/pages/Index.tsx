@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import MarketTicker from '@/components/MarketTicker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -231,6 +232,7 @@ const Index = () => {
         </section>
       </main>
       <Footer />
+      <MarketTicker />
     </div>
   );
 };
