@@ -226,7 +226,7 @@ const SalesFlow = () => {
             Exact așa arată chatbot-ul pe site-ul unui broker partener. Încearcă o conversație reală.
           </p>
           <iframe
-            src="[LINK_CHATBOT]"
+            src="/chatbot"
             width="100%"
             height="700px"
             frameBorder="0"
