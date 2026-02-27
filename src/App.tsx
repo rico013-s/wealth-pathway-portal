@@ -17,6 +17,7 @@ import Servicii from "./pages/Servicii";
 import Consultanta from "./pages/Consultanta";
 import DespreNoi from "./pages/DespreNoi";
 import Resurse from "./pages/Resurse";
+import SalesFlow from "./pages/SalesFlow";
 import { useChatbase } from "@/hooks/useChatbase";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => {
           <Route path="/consultanta" element={<Consultanta />} />
           <Route path="/despre-noi" element={<DespreNoi />} />
           <Route path="/resurse" element={<Resurse />} />
+          <Route path="/salesflow" element={<SalesFlow />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
