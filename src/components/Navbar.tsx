@@ -16,6 +16,7 @@ const navLinks = [
   { href: '/educatie', label: 'Educație' },
   { href: '/consultanta', label: 'Consultanță' },
   { href: '/despre-noi', label: 'Despre Noi' },
+  { href: '/salesflow', label: 'SalesFlow AI' },
   { href: '/careers', label: 'Cariere' },
 ];
 
