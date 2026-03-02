@@ -77,6 +77,101 @@ export type Database = {
         }
         Relationships: []
       }
+      salesflow_brokers: {
+        Row: {
+          active: boolean
+          admin_name: string
+          company_name: string
+          config: Json | null
+          created_at: string
+          days: number
+          expiry: string
+          id: string
+          password: string
+          username: string
+        }
+        Insert: {
+          active?: boolean
+          admin_name: string
+          company_name: string
+          config?: Json | null
+          created_at?: string
+          days?: number
+          expiry: string
+          id?: string
+          password: string
+          username: string
+        }
+        Update: {
+          active?: boolean
+          admin_name?: string
+          company_name?: string
+          config?: Json | null
+          created_at?: string
+          days?: number
+          expiry?: string
+          id?: string
+          password?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      salesflow_leads: {
+        Row: {
+          broker_id: string | null
+          capital: string | null
+          conversation: Json | null
+          created_at: string
+          experienta: string | null
+          id: string
+          obiectiv: string | null
+          orizont: string | null
+          profil: string | null
+          risc: string | null
+          score: number
+          status: string
+          sursa: string | null
+        }
+        Insert: {
+          broker_id?: string | null
+          capital?: string | null
+          conversation?: Json | null
+          created_at?: string
+          experienta?: string | null
+          id?: string
+          obiectiv?: string | null
+          orizont?: string | null
+          profil?: string | null
+          risc?: string | null
+          score?: number
+          status?: string
+          sursa?: string | null
+        }
+        Update: {
+          broker_id?: string | null
+          capital?: string | null
+          conversation?: Json | null
+          created_at?: string
+          experienta?: string | null
+          id?: string
+          obiectiv?: string | null
+          orizont?: string | null
+          profil?: string | null
+          risc?: string | null
+          score?: number
+          status?: string
+          sursa?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salesflow_leads_broker_id_fkey"
+            columns: ["broker_id"]
+            isOneToOne: false
+            referencedRelation: "salesflow_brokers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
