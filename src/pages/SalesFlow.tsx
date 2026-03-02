@@ -59,8 +59,8 @@ const SalesFlow = () => {
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full border border-[#0066FF]/30 bg-[#0066FF]/10 text-sm text-[#0066FF]">
-            <Shield className="w-4 h-4" />
-            Autorizat pentru brokeri ASF România
+            <Bot className="w-4 h-4" />
+            Calificare automată a leadurilor cu AI
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 tracking-tight">
             Transformă Vizitatorii în{" "}
