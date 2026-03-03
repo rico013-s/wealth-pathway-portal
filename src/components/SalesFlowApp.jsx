@@ -419,7 +419,7 @@ function Login({ onOwnerLogin, onBrokerLogin }) {
           <div key={label} style={{ marginBottom: 14 }}>
             <label style={{ fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 7 }}>{label}</label>
             <input value={val} onChange={e => setter(e.target.value)} onKeyDown={e => e.key === "Enter" && tryLogin()} type={type} placeholder={ph}
-              style={{ width: "100%", background: "#F8FAFC", border: `1.5px solid ${error ? "#FCA5A5" : "#E2E8F0"}`, borderRadius: 10, padding: "12px 15px", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans',sans-serif" }}
+              style={{ width: "100%", background: "#F8FAFC", border: `1.5px solid ${error ? "#FCA5A5" : "#E2E8F0"}`, borderRadius: 10, padding: "12px 15px", fontSize: 14, color: "#0F172A", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans',sans-serif" }}
               onFocus={e => e.target.style.borderColor = "#0066FF"} onBlur={e => e.target.style.borderColor = error ? "#FCA5A5" : "#E2E8F0"} />
           </div>
         ))}
