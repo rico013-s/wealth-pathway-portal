@@ -2,10 +2,15 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Single Page Application</title>
+    <title>Redirecting...</title>
     <script type="text/javascript">
-      var pathArray = window.location.pathname.split('/');
-      window.location.href = '/index.html';
+      // SPA redirect: preserve the path so React Router can handle it
+      var path = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+      window.location.replace(
+        window.location.origin + '/?redirect=' + encodeURIComponent(path + search + hash)
+      );
     </script>
   </head>
   <body></body>
