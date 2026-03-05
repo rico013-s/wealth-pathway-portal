@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { messages, systemPrompt, saveLead } = await req.json();
+    const { messages, systemPrompt, saveLead, brokerId } = await req.json();
 
     // If saveLead data is provided, save it to the database
     if (saveLead) {
@@ -20,7 +20,38 @@ Deno.serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       );
 
+      // Check license status if broker_id is provided
+      if (brokerId) {
+        const { data: broker } = await supabase
+          .from('salesflow_brokers')
+          .select('active, license_status, expiry, max_leads_per_month')
+          .eq('id', brokerId)
+          .single();
+
+        if (!broker || !broker.active || broker.license_status !== 'active' || new Date(broker.expiry) <= new Date()) {
+          return new Response(JSON.stringify({ error: 'License expired or inactive' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Check monthly limit
+        const { count } = await supabase
+          .from('salesflow_leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('broker_id', brokerId)
+          .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
+
+        if (count !== null && count >= (broker.max_leads_per_month || 500)) {
+          return new Response(JSON.stringify({ error: 'Monthly limit reached' }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
       const { error } = await supabase.from('salesflow_leads').insert({
+        broker_id: brokerId || null,
         score: saveLead.score || 0,
         status: saveLead.status || 'COLD',
         capital: saveLead.capital,
@@ -31,6 +62,11 @@ Deno.serve(async (req) => {
         obiectiv: saveLead.obiectiv,
         profil: saveLead.profil,
         conversation: saveLead.conversation || [],
+        session_id: saveLead.session_id || null,
+        age_range: saveLead.age_range || null,
+        existing_broker: saveLead.existing_broker || false,
+        platform: saveLead.platform || null,
+        completed: saveLead.completed || false,
       });
 
       if (error) {

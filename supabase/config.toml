@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.salesflow-chat]
 verify_jwt = false
+
+[functions.salesflow-broker-api]
+verify_jwt = false

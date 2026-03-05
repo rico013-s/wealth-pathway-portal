@@ -81,88 +81,125 @@ export type Database = {
         Row: {
           active: boolean
           admin_name: string
+          chatbot_id: string | null
           company_name: string
           config: Json | null
           created_at: string
           days: number
+          email: string | null
           expiry: string
           id: string
+          license_status: string
+          max_leads_per_month: number
           password: string
+          plan: string
           username: string
         }
         Insert: {
           active?: boolean
           admin_name: string
+          chatbot_id?: string | null
           company_name: string
           config?: Json | null
           created_at?: string
           days?: number
+          email?: string | null
           expiry: string
           id?: string
+          license_status?: string
+          max_leads_per_month?: number
           password: string
+          plan?: string
           username: string
         }
         Update: {
           active?: boolean
           admin_name?: string
+          chatbot_id?: string | null
           company_name?: string
           config?: Json | null
           created_at?: string
           days?: number
+          email?: string | null
           expiry?: string
           id?: string
+          license_status?: string
+          max_leads_per_month?: number
           password?: string
+          plan?: string
           username?: string
         }
         Relationships: []
       }
       salesflow_leads: {
         Row: {
+          age_range: string | null
           broker_id: string | null
           capital: string | null
+          completed: boolean | null
           conversation: Json | null
           created_at: string
+          existing_broker: boolean | null
           experienta: string | null
           id: string
           obiectiv: string | null
           orizont: string | null
+          platform: string | null
           profil: string | null
           risc: string | null
           score: number
+          session_id: string | null
           status: string
           sursa: string | null
         }
         Insert: {
+          age_range?: string | null
           broker_id?: string | null
           capital?: string | null
+          completed?: boolean | null
           conversation?: Json | null
           created_at?: string
+          existing_broker?: boolean | null
           experienta?: string | null
           id?: string
           obiectiv?: string | null
           orizont?: string | null
+          platform?: string | null
           profil?: string | null
           risc?: string | null
           score?: number
+          session_id?: string | null
           status?: string
           sursa?: string | null
         }
         Update: {
+          age_range?: string | null
           broker_id?: string | null
           capital?: string | null
+          completed?: boolean | null
           conversation?: Json | null
           created_at?: string
+          existing_broker?: boolean | null
           experienta?: string | null
           id?: string
           obiectiv?: string | null
           orizont?: string | null
+          platform?: string | null
           profil?: string | null
           risc?: string | null
           score?: number
+          session_id?: string | null
           status?: string
           sursa?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "salesflow_leads_broker_id_fkey"
+            columns: ["broker_id"]
+            isOneToOne: false
+            referencedRelation: "broker_stats"
+            referencedColumns: ["broker_id"]
+          },
           {
             foreignKeyName: "salesflow_leads_broker_id_fkey"
             columns: ["broker_id"]
@@ -195,7 +232,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      broker_stats: {
+        Row: {
+          active: boolean | null
+          admin_name: string | null
+          broker_id: string | null
+          chatbot_id: string | null
+          cold_leads_count: number | null
+          company_name: string | null
+          completion_rate: number | null
+          created_at: string | null
+          hot_leads_count: number | null
+          last_lead_at: string | null
+          license_expires_at: string | null
+          license_status: string | null
+          max_leads_per_month: number | null
+          plan: string | null
+          total_leads_this_month: number | null
+          username: string | null
+          warm_leads_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
