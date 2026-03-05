@@ -126,8 +126,9 @@ const sc = (score) => score >= 70
   : { color: "#DC2626", label: "COLD", bg: "#FEF2F2", border: "#FECACA" };
 const fmt = (ts) => new Date(ts).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 const fmtDate = (ts) => new Date(ts).toLocaleDateString("ro-RO", { day: "2-digit", month: "long", year: "numeric" });
+const generateSessionId = () => 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-const Badge = ({ status }) => {
+const StatusBadge = ({ status }) => {
   const s = sc(status === "HOT" ? 80 : status === "WARM" ? 55 : 20);
   return <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 800, fontFamily: "'DM Sans',sans-serif" }}>{status}</span>;
 };
@@ -142,35 +143,36 @@ const Avatar = ({ initials, color = "#0055D4", size = 36 }) => (
   <div style={{ width: size, height: size, minWidth: size, background: `linear-gradient(135deg,${color},${color}BB)`, borderRadius: size * 0.27, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: size * 0.34, fontFamily: "'DM Sans',sans-serif" }}>{initials}</div>
 );
 
-// ==================== EDGE FUNCTION HELPER ====================
+// ==================== EDGE FUNCTION HELPERS ====================
 const callEdgeFunction = async (payload) => {
-  const { data, error } = await supabase.functions.invoke('salesflow-chat', {
-    body: payload,
-  });
+  const { data, error } = await supabase.functions.invoke('salesflow-chat', { body: payload });
   if (error) throw error;
   return data;
 };
 
-// ==================== OWNER PANEL ====================
+const callBrokerApi = async (payload) => {
+  const { data, error } = await supabase.functions.invoke('salesflow-broker-api', { body: payload });
+  if (error) throw error;
+  return data;
+};
+
+// ==================== OWNER PANEL (STATS ONLY) ====================
 function OwnerPanel({ onLogout }) {
-  const [brokers, setBrokers] = useState([]);
-  const [leads, setLeads] = useState([]);
+  const [brokerStats, setBrokerStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [msg, setMsg] = useState("");
-  const [newBroker, setNewBroker] = useState({ companyName: "", adminName: "", username: "", password: "", days: "30", produse: [], capitalMin: "1.000 EUR", pragHot: "70", pragWarm: "40" });
-  const [activeTab, setActiveTab] = useState("brokers");
+  const [newBroker, setNewBroker] = useState({ companyName: "", adminName: "", username: "", password: "", email: "", days: "30", plan: "starter", produse: [], capitalMin: "1.000 EUR", pragHot: "70", pragWarm: "40", maxLeads: "500" });
+  const [extendDays, setExtendDays] = useState({});
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const { data: brokersData } = await supabase.from('salesflow_brokers').select('*').order('created_at', { ascending: false });
-      setBrokers(brokersData || []);
-      const { data: leadsData } = await supabase.from('salesflow_leads').select('*').order('created_at', { ascending: false });
-      setLeads(leadsData || []);
-    } catch { }
+      const result = await callBrokerApi({ action: 'owner-stats' });
+      setBrokerStats(result.stats || []);
+    } catch (e) { console.error('Error loading stats:', e); }
     setLoading(false);
   };
 
@@ -184,38 +186,43 @@ function OwnerPanel({ onLogout }) {
       admin_name: newBroker.adminName,
       username: newBroker.username,
       password: newBroker.password,
+      email: newBroker.email || null,
       active: true,
       expiry,
       days: parseInt(newBroker.days),
+      plan: newBroker.plan,
+      license_status: 'active',
+      max_leads_per_month: parseInt(newBroker.maxLeads) || 500,
       config: { produse: newBroker.produse, capitalMin: newBroker.capitalMin, pragHot: parseInt(newBroker.pragHot), pragWarm: parseInt(newBroker.pragWarm) },
     });
     if (error) { setMsg("❌ Eroare la salvare."); } else {
       setMsg("✅ Broker adaugat cu succes!");
-      setNewBroker({ companyName: "", adminName: "", username: "", password: "", days: "30", produse: [], capitalMin: "1.000 EUR", pragHot: "70", pragWarm: "40" });
+      setNewBroker({ companyName: "", adminName: "", username: "", password: "", email: "", days: "30", plan: "starter", produse: [], capitalMin: "1.000 EUR", pragHot: "70", pragWarm: "40", maxLeads: "500" });
       setShowAdd(false);
       loadData();
     }
     setTimeout(() => setMsg(""), 3000);
   };
 
-  const toggleBroker = async (broker) => {
-    await supabase.from('salesflow_brokers').update({ active: !broker.active }).eq('id', broker.id);
-    setBrokers(b => b.map(x => x.id === broker.id ? { ...x, active: !x.active } : x));
+  const manageLicense = async (brokerId, licenseAction, daysExtend) => {
+    try {
+      await callBrokerApi({ action: 'manage-license', broker_id: brokerId, license_action: licenseAction, days_extend: daysExtend });
+      setMsg(`✅ Licenta ${licenseAction === 'activate' ? 'activata' : licenseAction === 'suspend' ? 'suspendata' : 'extinsa'} cu succes!`);
+      loadData();
+    } catch { setMsg("❌ Eroare la gestionarea licentei."); }
+    setTimeout(() => setMsg(""), 3000);
   };
 
-  const deleteBroker = async (broker) => {
-    await supabase.from('salesflow_brokers').delete().eq('id', broker.id);
-    setBrokers(b => b.filter(x => x.id !== broker.id));
-  };
-
-  const activeBrokers = brokers.filter(b => b.active && new Date(b.expiry) > new Date());
+  const totalLeads = brokerStats.reduce((sum, b) => sum + (b.total_leads_this_month || 0), 0);
+  const totalHot = brokerStats.reduce((sum, b) => sum + (b.hot_leads_count || 0), 0);
+  const totalWarm = brokerStats.reduce((sum, b) => sum + (b.warm_leads_count || 0), 0);
+  const activeBrokers = brokerStats.filter(b => b.active && new Date(b.license_expires_at) > new Date());
   const PRODUSE_OPTIONS = ["Forex/CFD", "Actiuni & ETF-uri", "Materii prime", "Asigurari de viata", "Fonduri de investitii", "Criptomonede", "Obligatiuni"];
-
-  const leadCounts = { HOT: leads.filter(l => l.status === "HOT").length, WARM: leads.filter(l => l.status === "WARM").length, COLD: leads.filter(l => l.status === "COLD").length };
 
   return (
     <div style={{ minHeight: "100vh", background: "#0A0F1E", fontFamily: "'DM Sans',sans-serif", color: "#E8F0FF" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      {/* Header */}
       <div style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 42, height: 42, background: "linear-gradient(135deg,#0066FF,#00C896)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 18 }}>S</div>
@@ -233,7 +240,7 @@ function OwnerPanel({ onLogout }) {
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "28px 20px" }}>
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 24 }}>
-          {[["Brokeri Activi", activeBrokers.length, "#00C896"], ["Total Leaduri", leads.length, "#4A9EFF"], ["Leaduri HOT 🔥", leadCounts.HOT, "#00A86B"], ["Leaduri WARM ⚡", leadCounts.WARM, "#D97706"]].map(([l, v, c]) => (
+          {[["Brokeri Activi", activeBrokers.length, "#00C896"], ["Leaduri Luna Asta", totalLeads, "#4A9EFF"], ["Leaduri HOT 🔥", totalHot, "#00A86B"], ["Leaduri WARM ⚡", totalWarm, "#D97706"]].map(([l, v, c]) => (
             <div key={l} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: "18px 20px", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>{l}</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: c }}>{v}</div>
@@ -243,142 +250,310 @@ function OwnerPanel({ onLogout }) {
 
         {msg && <div style={{ background: msg.startsWith("✅") ? "rgba(0,200,150,0.1)" : "rgba(224,90,90,0.1)", border: `1px solid ${msg.startsWith("✅") ? "rgba(0,200,150,0.3)" : "rgba(224,90,90,0.3)"}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13, fontWeight: 600, color: msg.startsWith("✅") ? "#00C896" : "#E05A5A" }}>{msg}</div>}
 
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {[["brokers", "Brokeri"], ["leads", "Leaduri"]].map(([key, label]) => (
-            <button key={key} onClick={() => setActiveTab(key)} style={{ background: activeTab === key ? "rgba(0,102,255,0.2)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${activeTab === key ? "#4A9EFF" : "rgba(255,255,255,0.1)"}`, color: activeTab === key ? "#4A9EFF" : "#5B7FA6", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{label}</button>
-          ))}
-          <button onClick={loadData} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#5B7FA6", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>↺ Refresh</button>
+        {/* Controls */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "#E8F0FF" }}>Brokeri & Statistici ({brokerStats.length})</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={loadData} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#5B7FA6", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>↺ Refresh</button>
+            <button onClick={() => setShowAdd(!showAdd)} style={{ background: showAdd ? "rgba(0,102,255,0.2)" : "linear-gradient(135deg,#0066FF,#0044CC)", border: showAdd ? "1px solid rgba(0,102,255,0.4)" : "none", color: "#fff", borderRadius: 10, padding: "8px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              {showAdd ? "✕ Anuleaza" : "+ Broker Nou"}
+            </button>
+          </div>
         </div>
 
-        {activeTab === "brokers" && (
-          <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: "#E8F0FF" }}>Brokeri ({brokers.length})</div>
-              <button onClick={() => setShowAdd(!showAdd)} style={{ background: showAdd ? "rgba(0,102,255,0.2)" : "linear-gradient(135deg,#0066FF,#0044CC)", border: showAdd ? "1px solid rgba(0,102,255,0.4)" : "none", color: "#fff", borderRadius: 10, padding: "8px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
-                {showAdd ? "✕ Anuleaza" : "+ Broker Nou"}
-              </button>
+        {/* Add Broker Form */}
+        {showAdd && (
+          <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 16, padding: 24, marginBottom: 20, border: "1px solid rgba(0,102,255,0.2)" }}>
+            <div style={{ fontWeight: 800, fontSize: 14, color: "#4A9EFF", marginBottom: 18 }}>Broker Nou + Configurare</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              {[["Companie *", "companyName", "ex: TradeMax SRL"], ["Nume Admin *", "adminName", "ex: Ion Popescu"], ["Username *", "username", "ex: ion.popescu"], ["Parola *", "password", "min 8 caractere"], ["Email", "email", "ex: admin@tradmax.ro"], ["Capital Minim", "capitalMin", "ex: 1.000 EUR"], ["Max Leaduri/Luna", "maxLeads", "ex: 500"]].map(([label, field, ph]) => (
+                <div key={field}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 }}>{label}</label>
+                  <input value={newBroker[field]} onChange={e => setNewBroker(n => ({ ...n, [field]: e.target.value }))} placeholder={ph}
+                    type={field === "password" ? "password" : "text"}
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 9, padding: "10px 14px", color: "#E8F0FF", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans',sans-serif" }} />
+                </div>
+              ))}
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 }}>Plan</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {["starter", "pro", "enterprise"].map(p => (
+                    <button key={p} onClick={() => setNewBroker(n => ({ ...n, plan: p }))} style={{ background: newBroker.plan === p ? "rgba(0,102,255,0.2)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${newBroker.plan === p ? "#4A9EFF" : "rgba(255,255,255,0.1)"}`, color: newBroker.plan === p ? "#4A9EFF" : "#5B7FA6", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", textTransform: "uppercase" }}>{p}</button>
+                  ))}
+                </div>
+              </div>
             </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 }}>Praguri HOT / WARM</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input value={newBroker.pragHot} onChange={e => setNewBroker(n => ({ ...n, pragHot: e.target.value }))} placeholder="HOT (ex: 70)"
+                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 9, padding: "10px 14px", color: "#E8F0FF", fontSize: 13, outline: "none", fontFamily: "'DM Sans',sans-serif" }} />
+                  <input value={newBroker.pragWarm} onChange={e => setNewBroker(n => ({ ...n, pragWarm: e.target.value }))} placeholder="WARM (ex: 40)"
+                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 9, padding: "10px 14px", color: "#E8F0FF", fontSize: 13, outline: "none", fontFamily: "'DM Sans',sans-serif" }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 }}>Durata Licenta</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[["30 zile", "30"], ["60 zile", "60"], ["90 zile", "90"], ["365 zile", "365"]].map(([label, val]) => (
+                    <button key={val} onClick={() => setNewBroker(n => ({ ...n, days: val }))} style={{ background: newBroker.days === val ? "rgba(0,102,255,0.2)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${newBroker.days === val ? "#4A9EFF" : "rgba(255,255,255,0.1)"}`, color: newBroker.days === val ? "#4A9EFF" : "#5B7FA6", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{label}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 8 }}>Produse Oferite</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {PRODUSE_OPTIONS.map(p => (
+                  <button key={p} onClick={() => setNewBroker(n => ({ ...n, produse: n.produse.includes(p) ? n.produse.filter(x => x !== p) : [...n.produse, p] }))}
+                    style={{ background: newBroker.produse.includes(p) ? "rgba(0,200,150,0.15)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${newBroker.produse.includes(p) ? "#00C896" : "rgba(255,255,255,0.1)"}`, color: newBroker.produse.includes(p) ? "#00C896" : "#5B7FA6", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{p}</button>
+                ))}
+              </div>
+            </div>
+            <button onClick={addBroker} style={{ marginTop: 18, background: "linear-gradient(135deg,#0066FF,#0044CC)", border: "none", color: "#fff", borderRadius: 10, padding: "12px 28px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", boxShadow: "0 4px 14px rgba(0,102,255,0.3)" }}>
+              ✓ Creeaza Cont Broker
+            </button>
+          </div>
+        )}
 
-            {showAdd && (
-              <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 16, padding: 24, marginBottom: 20, border: "1px solid rgba(0,102,255,0.2)" }}>
-                <div style={{ fontWeight: 800, fontSize: 14, color: "#4A9EFF", marginBottom: 18 }}>Broker Nou + Configurare Chatbot</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  {[["Companie *", "companyName", "ex: TradeMax SRL"], ["Nume Admin *", "adminName", "ex: Ion Popescu"], ["Username *", "username", "ex: ion.popescu"], ["Parola *", "password", "min 8 caractere"], ["Capital Minim Acceptat", "capitalMin", "ex: 1.000 EUR"]].map(([label, field, ph]) => (
-                    <div key={field}>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 }}>{label}</label>
-                      <input value={newBroker[field]} onChange={e => setNewBroker(n => ({ ...n, [field]: e.target.value }))} placeholder={ph}
-                        type={field === "password" ? "password" : "text"}
-                        style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 9, padding: "10px 14px", color: "#E8F0FF", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans',sans-serif" }} />
+        {/* Broker Stats Cards — NO individual lead data visible */}
+        {loading ? <div style={{ textAlign: "center", padding: 40, color: "#3D5A7A" }}>Se incarca...</div>
+          : brokerStats.length === 0 ? (
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: 48, textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🏢</div>
+              <div style={{ fontWeight: 700, color: "#E8F0FF", marginBottom: 6 }}>Niciun broker adaugat inca</div>
+            </div>
+          ) : brokerStats.map(broker => {
+            const act = broker.active && new Date(broker.license_expires_at) > new Date();
+            const days = Math.ceil((new Date(broker.license_expires_at) - new Date()) / 86400000);
+            const urgent = act && days <= 5;
+            const avatar = broker.admin_name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "??";
+            const usagePercent = broker.max_leads_per_month > 0 ? Math.round((broker.total_leads_this_month / broker.max_leads_per_month) * 100) : 0;
+            return (
+              <div key={broker.broker_id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 20px", border: `1.5px solid ${!act ? "rgba(224,90,90,0.2)" : urgent ? "rgba(245,166,35,0.3)" : "rgba(255,255,255,0.07)"}`, marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <Avatar initials={avatar} size={42} color={act ? "#0055D4" : "#64748B"} />
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 15, color: act ? "#E8F0FF" : "#5B7FA6" }}>{broker.company_name}</div>
+                      <div style={{ fontSize: 12, color: "#3D5A7A" }}>@{broker.username} • {broker.admin_name}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ background: "rgba(0,102,255,0.1)", border: "1px solid rgba(0,102,255,0.3)", color: "#4A9EFF", fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase" }}>{broker.plan}</span>
+                    <span style={{ background: act ? "rgba(0,200,150,0.12)" : "rgba(224,90,90,0.12)", border: `1px solid ${act ? "rgba(0,200,150,0.3)" : "rgba(224,90,90,0.3)"}`, color: act ? "#00C896" : "#E05A5A", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 20 }}>{act ? "ACTIV" : broker.license_status?.toUpperCase() || "EXPIRAT"}</span>
+                    <span style={{ background: urgent ? "rgba(245,166,35,0.12)" : "rgba(255,255,255,0.05)", border: `1px solid ${urgent ? "rgba(245,166,35,0.3)" : "rgba(255,255,255,0.08)"}`, color: urgent ? "#F5A623" : "#5B7FA6", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>
+                      {act ? `${days} zile` : `Expirat ${fmtDate(broker.license_expires_at)}`}
+                    </span>
+                  </div>
+                </div>
+                {/* Stats row — aggregated only, no individual lead data */}
+                <div style={{ display: "flex", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
+                  {[["Leaduri Luna", broker.total_leads_this_month, "#4A9EFF"], ["HOT", broker.hot_leads_count, "#00A86B"], ["WARM", broker.warm_leads_count, "#D97706"], ["COLD", broker.cold_leads_count, "#DC2626"]].map(([label, val, color]) => (
+                    <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 10, color: "#3D5A7A", textTransform: "uppercase", fontWeight: 700 }}>{label}</div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color }}>{val}</div>
                     </div>
                   ))}
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 6 }}>Praguri HOT / WARM</label>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input value={newBroker.pragHot} onChange={e => setNewBroker(n => ({ ...n, pragHot: e.target.value }))} placeholder="HOT (ex: 70)"
-                        style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 9, padding: "10px 14px", color: "#E8F0FF", fontSize: 13, outline: "none", fontFamily: "'DM Sans',sans-serif" }} />
-                      <input value={newBroker.pragWarm} onChange={e => setNewBroker(n => ({ ...n, pragWarm: e.target.value }))} placeholder="WARM (ex: 40)"
-                        style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 9, padding: "10px 14px", color: "#E8F0FF", fontSize: 13, outline: "none", fontFamily: "'DM Sans',sans-serif" }} />
+                  <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ fontSize: 10, color: "#3D5A7A", textTransform: "uppercase", fontWeight: 700 }}>Completare</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: "#4A9EFF" }}>{broker.completion_rate}%</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ fontSize: 10, color: "#3D5A7A", textTransform: "uppercase", fontWeight: 700 }}>Utilizare</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: usagePercent >= 90 ? "#DC2626" : usagePercent >= 70 ? "#D97706" : "#00C896" }}>{broker.total_leads_this_month}/{broker.max_leads_per_month}</div>
+                  </div>
+                  {broker.last_lead_at && (
+                    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 10, color: "#3D5A7A", textTransform: "uppercase", fontWeight: 700 }}>Ultim Lead</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#5B7FA6", marginTop: 2 }}>{fmt(broker.last_lead_at)}</div>
                     </div>
-                  </div>
+                  )}
                 </div>
-                <div style={{ marginTop: 14 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 8 }}>Produse Oferite</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {PRODUSE_OPTIONS.map(p => (
-                      <button key={p} onClick={() => setNewBroker(n => ({ ...n, produse: n.produse.includes(p) ? n.produse.filter(x => x !== p) : [...n.produse, p] }))}
-                        style={{ background: newBroker.produse.includes(p) ? "rgba(0,200,150,0.15)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${newBroker.produse.includes(p) ? "#00C896" : "rgba(255,255,255,0.1)"}`, color: newBroker.produse.includes(p) ? "#00C896" : "#5B7FA6", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{p}</button>
-                    ))}
+                {/* License management actions */}
+                <div style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "center", flexWrap: "wrap" }}>
+                  {act ? (
+                    <button onClick={() => manageLicense(broker.broker_id, 'suspend')} style={{ background: "rgba(224,90,90,0.1)", border: "1px solid rgba(224,90,90,0.25)", color: "#E05A5A", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Suspenda</button>
+                  ) : (
+                    <button onClick={() => manageLicense(broker.broker_id, 'activate')} style={{ background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", color: "#00C896", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Activeaza</button>
+                  )}
+                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <input
+                      value={extendDays[broker.broker_id] || ""}
+                      onChange={e => setExtendDays(d => ({ ...d, [broker.broker_id]: e.target.value }))}
+                      placeholder="30"
+                      style={{ width: 50, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "6px 8px", color: "#E8F0FF", fontSize: 11, outline: "none", textAlign: "center", fontFamily: "'DM Sans',sans-serif" }}
+                    />
+                    <button onClick={() => manageLicense(broker.broker_id, 'extend', parseInt(extendDays[broker.broker_id]) || 30)} style={{ background: "rgba(0,102,255,0.1)", border: "1px solid rgba(0,102,255,0.25)", color: "#4A9EFF", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>+Extinde Zile</button>
                   </div>
+                  <span style={{ fontSize: 10, color: "#3D5A7A", fontStyle: "italic" }}>chatbot_id: {broker.chatbot_id?.slice(0, 8)}...</span>
                 </div>
-                <div style={{ marginTop: 14 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 8 }}>Durata Licenta</label>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {[["30 zile", "30"], ["60 zile", "60"], ["90 zile", "90"], ["365 zile", "365"]].map(([label, val]) => (
-                      <button key={val} onClick={() => setNewBroker(n => ({ ...n, days: val }))} style={{ background: newBroker.days === val ? "rgba(0,102,255,0.2)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${newBroker.days === val ? "#4A9EFF" : "rgba(255,255,255,0.1)"}`, color: newBroker.days === val ? "#4A9EFF" : "#5B7FA6", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{label}</button>
-                    ))}
-                  </div>
-                </div>
-                <button onClick={addBroker} style={{ marginTop: 18, background: "linear-gradient(135deg,#0066FF,#0044CC)", border: "none", color: "#fff", borderRadius: 10, padding: "12px 28px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", boxShadow: "0 4px 14px rgba(0,102,255,0.3)" }}>
-                  ✓ Creeaza Cont Broker
-                </button>
               </div>
-            )}
+            );
+          })}
+      </div>
+    </div>
+  );
+}
 
-            {loading ? <div style={{ textAlign: "center", padding: 40, color: "#3D5A7A" }}>Se incarca...</div>
-              : brokers.length === 0 ? (
-                <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: 48, textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🏢</div>
-                  <div style={{ fontWeight: 700, color: "#E8F0FF", marginBottom: 6 }}>Niciun broker adaugat inca</div>
-                </div>
-              ) : brokers.map(broker => {
-                const act = broker.active && new Date(broker.expiry) > new Date();
-                const days = Math.ceil((new Date(broker.expiry) - new Date()) / 86400000);
-                const urgent = act && days <= 5;
-                const avatar = broker.admin_name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "??";
-                return (
-                  <div key={broker.id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 20px", border: `1.5px solid ${!act ? "rgba(224,90,90,0.2)" : urgent ? "rgba(245,166,35,0.3)" : "rgba(255,255,255,0.07)"}`, marginBottom: 10 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <Avatar initials={avatar} size={42} color={act ? "#0055D4" : "#64748B"} />
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: act ? "#E8F0FF" : "#5B7FA6" }}>{broker.company_name}</div>
-                          <div style={{ fontSize: 12, color: "#3D5A7A" }}>@{broker.username} • {broker.admin_name}</div>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        <span style={{ background: act ? "rgba(0,200,150,0.12)" : "rgba(224,90,90,0.12)", border: `1px solid ${act ? "rgba(0,200,150,0.3)" : "rgba(224,90,90,0.3)"}`, color: act ? "#00C896" : "#E05A5A", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 20 }}>{act ? "ACTIV" : "EXPIRAT"}</span>
-                        <span style={{ background: urgent ? "rgba(245,166,35,0.12)" : "rgba(255,255,255,0.05)", border: `1px solid ${urgent ? "rgba(245,166,35,0.3)" : "rgba(255,255,255,0.08)"}`, color: urgent ? "#F5A623" : "#5B7FA6", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>
-                          {act ? `${days} zile` : `Expirat ${fmtDate(broker.expiry)}`}
-                        </span>
-                        <button onClick={() => toggleBroker(broker)} style={{ background: act ? "rgba(224,90,90,0.1)" : "rgba(0,200,150,0.1)", border: `1px solid ${act ? "rgba(224,90,90,0.25)" : "rgba(0,200,150,0.25)"}`, color: act ? "#E05A5A" : "#00C896", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{act ? "Blocheaza" : "Activeaza"}</button>
-                        <button onClick={() => deleteBroker(broker)} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#3D5A7A", borderRadius: 8, padding: "6px 12px", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>🗑</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-          </>
+// ==================== BROKER DASHBOARD ====================
+function BrokerDashboard({ broker, onLogout }) {
+  const [leads, setLeads] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("ALL");
+  const [expandedLead, setExpandedLead] = useState(null);
+
+  useEffect(() => { loadData(); }, [filter]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [leadsResult, statsResult] = await Promise.all([
+        callBrokerApi({
+          action: 'get-leads',
+          broker_id: broker.id,
+          broker_username: broker.username,
+          broker_password: broker.password,
+          filter,
+        }),
+        callBrokerApi({ action: 'get-broker-stats', broker_id: broker.id }),
+      ]);
+      setLeads(leadsResult.leads || []);
+      setStats(statsResult.stats || null);
+    } catch (e) { console.error('Error loading data:', e); }
+    setLoading(false);
+  };
+
+  const exportCSV = () => {
+    if (leads.length === 0) return;
+    const headers = ["ID", "Data", "Scor", "Status", "Capital", "Experienta", "Risc", "Orizont", "Obiectiv", "Profil", "Completat"];
+    const rows = leads.map(l => [
+      l.id?.slice(-8),
+      new Date(l.created_at).toLocaleDateString("ro-RO"),
+      l.score,
+      l.status,
+      l.capital || "",
+      l.experienta || "",
+      l.risc || "",
+      l.orizont || "",
+      l.obiectiv || "",
+      l.profil || "",
+      l.completed ? "Da" : "Nu",
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${v}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_${broker.company_name}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+  };
+
+  const avatar = broker.admin_name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "??";
+  const usagePercent = stats?.max_leads_per_month > 0 ? Math.round((stats.total_leads_this_month / stats.max_leads_per_month) * 100) : 0;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0A0F1E", fontFamily: "'DM Sans',sans-serif", color: "#E8F0FF" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      {/* Header */}
+      <div style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Avatar initials={avatar} size={42} color="#0055D4" />
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: "#fff" }}>{broker.company_name}</div>
+            <div style={{ fontSize: 11, color: "#3D5A7A", letterSpacing: "1px", textTransform: "uppercase" }}>Broker Dashboard</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <span style={{ background: "rgba(0,102,255,0.15)", color: "#4A9EFF", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 20, border: "1px solid rgba(0,102,255,0.3)", textTransform: "uppercase" }}>{broker.plan || "starter"}</span>
+          <button onClick={onLogout} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#5B7FA6", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Iesi</button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "28px 20px" }}>
+        {/* Stats Cards */}
+        {stats && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 24 }}>
+            {[["Leaduri Luna", stats.total_leads_this_month, "#4A9EFF"], ["HOT 🔥", stats.hot_leads_count, "#00A86B"], ["WARM ⚡", stats.warm_leads_count, "#D97706"], ["COLD ❄️", stats.cold_leads_count, "#DC2626"]].map(([l, v, c]) => (
+              <div key={l} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: "16px 18px", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>{l}</div>
+                <div style={{ fontSize: 26, fontWeight: 900, color: c }}>{v}</div>
+              </div>
+            ))}
+            <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: "16px 18px", border: `1px solid ${usagePercent >= 90 ? "rgba(224,90,90,0.3)" : "rgba(255,255,255,0.07)"}` }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#3D5A7A", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Utilizare</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: usagePercent >= 90 ? "#DC2626" : usagePercent >= 70 ? "#D97706" : "#00C896" }}>
+                {stats.total_leads_this_month}/{stats.max_leads_per_month}
+              </div>
+              <div style={{ width: "100%", height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 4, marginTop: 6 }}>
+                <div style={{ width: `${Math.min(usagePercent, 100)}%`, height: "100%", background: usagePercent >= 90 ? "#DC2626" : usagePercent >= 70 ? "#D97706" : "#00C896", borderRadius: 4, transition: "width 0.3s" }} />
+              </div>
+            </div>
+          </div>
         )}
 
-        {activeTab === "leads" && (
-          <>
-            <div style={{ fontWeight: 800, fontSize: 15, color: "#E8F0FF", marginBottom: 16 }}>Leaduri ({leads.length})</div>
-            {loading ? <div style={{ textAlign: "center", padding: 40, color: "#3D5A7A" }}>Se incarca...</div>
-              : leads.length === 0 ? (
-                <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: 48, textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-                  <div style={{ fontWeight: 700, color: "#E8F0FF", marginBottom: 6 }}>Niciun lead inca</div>
-                  <div style={{ fontSize: 13, color: "#3D5A7A" }}>Leadurile apar dupa ce clientii completeaza chatbot-ul.</div>
-                </div>
-              ) : leads.map(lead => {
-                const s = sc(lead.score);
-                return (
-                  <div key={lead.id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "14px 18px", border: `1.5px solid rgba(255,255,255,0.07)`, marginBottom: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 38, height: 38, background: s.bg, border: `1.5px solid ${s.border}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 14, color: s.color }}>{lead.score}</div>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: "#E8F0FF" }}>Lead #{lead.id?.slice(-6)}</div>
-                          <div style={{ fontSize: 11, color: "#3D5A7A" }}>{fmt(lead.created_at)}</div>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                        {lead.profil && <ProfileBadge profil={lead.profil} />}
-                        <span style={{ fontSize: 12, color: "#5B7FA6" }}>{lead.capital}</span>
-                        <Badge status={lead.status} />
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
-                      {[["Experienta", lead.experienta], ["Risc", lead.risc], ["Orizont", lead.orizont], ["Obiectiv", lead.obiectiv]].map(([k, v]) => v && v !== "—" && v !== "N/A" ? (
-                        <span key={k} style={{ fontSize: 11, color: "#5B7FA6", background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: 6 }}>{k}: {v}</span>
-                      ) : null)}
+        {/* Filters & Actions */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            {["ALL", "HOT", "WARM", "COLD"].map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? "rgba(0,102,255,0.2)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${filter === f ? "#4A9EFF" : "rgba(255,255,255,0.1)"}`, color: filter === f ? "#4A9EFF" : "#5B7FA6", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>{f === "ALL" ? "Toate" : f}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={loadData} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#5B7FA6", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>↺ Refresh</button>
+            <button onClick={exportCSV} style={{ background: "linear-gradient(135deg,#00A86B,#008F5A)", border: "none", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📥 Export CSV</button>
+          </div>
+        </div>
+
+        {/* Leads List */}
+        <div style={{ fontWeight: 800, fontSize: 15, color: "#E8F0FF", marginBottom: 12 }}>Leaduri ({leads.length})</div>
+        {loading ? <div style={{ textAlign: "center", padding: 40, color: "#3D5A7A" }}>Se incarca...</div>
+          : leads.length === 0 ? (
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: 48, textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+              <div style={{ fontWeight: 700, color: "#E8F0FF", marginBottom: 6 }}>Niciun lead {filter !== "ALL" ? `cu status ${filter}` : ""}</div>
+              <div style={{ fontSize: 13, color: "#3D5A7A" }}>Leadurile apar dupa ce clientii completeaza chatbot-ul.</div>
+            </div>
+          ) : leads.map(lead => {
+            const s = sc(lead.score);
+            const isExpanded = expandedLead === lead.id;
+            return (
+              <div key={lead.id} onClick={() => setExpandedLead(isExpanded ? null : lead.id)} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "14px 18px", border: `1.5px solid ${isExpanded ? "rgba(0,102,255,0.3)" : "rgba(255,255,255,0.07)"}`, marginBottom: 8, cursor: "pointer", transition: "border-color 0.2s" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 38, height: 38, background: s.bg, border: `1.5px solid ${s.border}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 14, color: s.color }}>{lead.score}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#E8F0FF" }}>Lead #{lead.id?.slice(-6)}</div>
+                      <div style={{ fontSize: 11, color: "#3D5A7A" }}>{fmt(lead.created_at)} {lead.completed && "✅"}</div>
                     </div>
                   </div>
-                );
-              })}
-          </>
-        )}
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    {lead.profil && <ProfileBadge profil={lead.profil} />}
+                    <span style={{ fontSize: 12, color: "#5B7FA6" }}>{lead.capital}</span>
+                    <StatusBadge status={lead.status} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
+                  {[["Experienta", lead.experienta], ["Risc", lead.risc], ["Orizont", lead.orizont], ["Obiectiv", lead.obiectiv], ["Varsta", lead.age_range]].map(([k, v]) => v && v !== "—" && v !== "N/A" ? (
+                    <span key={k} style={{ fontSize: 11, color: "#5B7FA6", background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: 6 }}>{k}: {v}</span>
+                  ) : null)}
+                </div>
+                {/* Expanded: show conversation */}
+                {isExpanded && lead.conversation && Array.isArray(lead.conversation) && lead.conversation.length > 0 && (
+                  <div style={{ marginTop: 14, background: "rgba(0,0,0,0.2)", borderRadius: 10, padding: 14, maxHeight: 300, overflowY: "auto" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#3D5A7A", marginBottom: 10, textTransform: "uppercase" }}>Conversatie</div>
+                    {lead.conversation.map((msg, i) => (
+                      <div key={i} style={{ marginBottom: 8, padding: "6px 10px", background: msg.role === "user" ? "rgba(0,102,255,0.1)" : "rgba(255,255,255,0.04)", borderRadius: 8, fontSize: 12, color: msg.role === "user" ? "#4A9EFF" : "#94A3B8", lineHeight: 1.5 }}>
+                        <span style={{ fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{msg.role === "user" ? "Client" : "AI"}: </span>
+                        {msg.content?.slice(0, 200)}{msg.content?.length > 200 ? "..." : ""}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
       </div>
     </div>
   );
@@ -398,8 +573,12 @@ function Login({ onOwnerLogin, onBrokerLogin }) {
       onOwnerLogin(); setLoading(false); return;
     }
     try {
-      const { data } = await supabase.from('salesflow_brokers').select('*').eq('username', username).eq('password', password).single();
-      if (data) { onBrokerLogin(data); setLoading(false); return; }
+      const result = await callBrokerApi({ action: 'login', username, password });
+      if (result.broker) {
+        onBrokerLogin(result.broker);
+        setLoading(false);
+        return;
+      }
     } catch { }
     setError("Username sau parola incorecta.");
     setTimeout(() => setError(""), 3000);
@@ -434,26 +613,61 @@ function Login({ onOwnerLogin, onBrokerLogin }) {
 }
 
 // ==================== CLIENT CHATBOT (ADAPTIV) ====================
-function ClientChatbot({ onGoToLogin, brokerConfig = {} }) {
+function ClientChatbot({ onGoToLogin, brokerConfig = {}, brokerId = null }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(null);
+  const [licenseError, setLicenseError] = useState(null);
+  const [limitReached, setLimitReached] = useState(false);
+  const [sessionId] = useState(generateSessionId);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
+  // Check license and limits when broker_id is provided
+  useEffect(() => {
+    if (brokerId) {
+      checkBrokerStatus();
+    }
+  }, [brokerId]);
+
+  const checkBrokerStatus = async () => {
+    try {
+      const [licenseResult, limitResult] = await Promise.all([
+        callBrokerApi({ action: 'check-license', broker_id: brokerId }),
+        callBrokerApi({ action: 'check-limit', broker_id: brokerId }),
+      ]);
+      if (!licenseResult.isActive) {
+        setLicenseError("expired");
+      }
+      if (limitResult.limitReached) {
+        setLimitReached(true);
+      }
+    } catch (e) { console.error('Error checking broker status:', e); }
+  };
+
   const saveLead = async (data, conversation) => {
     try {
-      await callEdgeFunction({
+      const response = await callEdgeFunction({
         saveLead: {
           ...data,
+          session_id: sessionId,
+          completed: true,
+          platform: window.location.hostname,
           conversation: conversation.map(m => ({ role: m.role, content: m.content })),
         },
+        brokerId,
       });
+      if (response.error) {
+        if (response.error === 'Monthly limit reached') {
+          setLimitReached(true);
+        }
+        return;
+      }
       setLeadSaved(true);
     } catch (e) { console.error('Error saving lead:', e); }
   };
@@ -495,6 +709,32 @@ function ClientChatbot({ onGoToLogin, brokerConfig = {} }) {
     } catch { setMessages(m => [...m, { role: "assistant", content: "Va rog sa repetati, a aparut o problema tehnica." }]); }
     setLoading(false);
   };
+
+  // License expired screen
+  if (licenseError === "expired") {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F8F9FC", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 48, maxWidth: 440, textAlign: "center", border: "1px solid #E2E8F0" }}>
+          <div style={{ fontSize: 56, marginBottom: 20 }}>⏰</div>
+          <div style={{ fontWeight: 800, fontSize: 22, color: "#0F172A", marginBottom: 10 }}>Serviciu Indisponibil</div>
+          <div style={{ fontSize: 14, color: "#64748B", lineHeight: 1.8 }}>Acest chatbot nu este disponibil momentan. Vă rugăm contactați administratorul.</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Monthly limit reached screen
+  if (limitReached) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F8F9FC", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 48, maxWidth: 440, textAlign: "center", border: "1px solid #E2E8F0" }}>
+          <div style={{ fontSize: 56, marginBottom: 20 }}>📊</div>
+          <div style={{ fontWeight: 800, fontSize: 22, color: "#0F172A", marginBottom: 10 }}>Limita Lunară Atinsă</div>
+          <div style={{ fontSize: 14, color: "#64748B", lineHeight: 1.8 }}>Limita lunară de conversații a fost atinsă. Contactați brokerul pentru mai multe informații.</div>
+        </div>
+      </div>
+    );
+  }
 
   const visible = messages.filter(m => !m.hidden);
   const companyName = brokerConfig.companyName || "InvestPro Capital";
@@ -567,7 +807,7 @@ function ClientChatbot({ onGoToLogin, brokerConfig = {} }) {
             </div>
             <div style={{ padding: "12px 0 16px", display: "flex", gap: 9 }}>
               <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Scrieti raspunsul dumneavoastra..."
-                style={{ flex: 1, background: "#fff", border: "1.5px solid #E2E8F0", borderRadius: 11, padding: "11px 15px", fontSize: 14, outline: "none", fontFamily: "'DM Sans',sans-serif" }}
+                style={{ flex: 1, background: "#fff", border: "1.5px solid #E2E8F0", borderRadius: 11, padding: "11px 15px", fontSize: 14, color: "#0F172A", outline: "none", fontFamily: "'DM Sans',sans-serif" }}
                 onFocus={e => e.target.style.borderColor = "#0055D4"} onBlur={e => e.target.style.borderColor = "#E2E8F0"} />
               <button onClick={sendMessage} disabled={loading || !input.trim()} style={{ background: loading || !input.trim() ? "#EEF2FF" : "linear-gradient(135deg,#003087,#0055D4)", border: "none", borderRadius: 11, width: 46, height: 46, cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontSize: 17, color: loading || !input.trim() ? "#94A3B8" : "#fff", transition: "all 0.2s" }}>→</button>
             </div>
@@ -580,25 +820,28 @@ function ClientChatbot({ onGoToLogin, brokerConfig = {} }) {
 }
 
 // ==================== MAIN ====================
-export default function SalesFlowApp() {
+export default function SalesFlowApp({ brokerId = null, brokerConfig = null }) {
   const [view, setView] = useState("client");
   const [currentBroker, setCurrentBroker] = useState(null);
 
   const handleBrokerLogin = (broker) => {
     setCurrentBroker(broker);
-    const act = broker.active && new Date(broker.expiry) > new Date();
+    const act = broker.active && new Date(broker.expiry) > new Date() && broker.license_status !== 'suspended';
     setView(act ? "broker" : "expired");
   };
 
-  if (view === "client") return <ClientChatbot onGoToLogin={() => setView("login")} brokerConfig={{ companyName: "InvestPro Capital", produse: ["Forex/CFD", "Actiuni & ETF-uri", "Materii prime"], capitalMin: "1.000 EUR", pragHot: 70, pragWarm: 40 }} />;
+  const defaultConfig = brokerConfig || { companyName: "InvestPro Capital", produse: ["Forex/CFD", "Actiuni & ETF-uri", "Materii prime"], capitalMin: "1.000 EUR", pragHot: 70, pragWarm: 40 };
+
+  if (view === "client") return <ClientChatbot onGoToLogin={() => setView("login")} brokerConfig={defaultConfig} brokerId={brokerId} />;
   if (view === "login") return <Login onOwnerLogin={() => setView("owner")} onBrokerLogin={handleBrokerLogin} />;
   if (view === "owner") return <OwnerPanel onLogout={() => setView("client")} />;
+  if (view === "broker" && currentBroker) return <BrokerDashboard broker={currentBroker} onLogout={() => { setCurrentBroker(null); setView("client"); }} />;
   if (view === "expired" && currentBroker) return (
     <div style={{ minHeight: "100vh", background: "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans',sans-serif" }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: 48, maxWidth: 440, textAlign: "center", border: "1px solid #E2E8F0" }}>
         <div style={{ fontSize: 56, marginBottom: 20 }}>⏰</div>
         <div style={{ fontWeight: 800, fontSize: 22, color: "#0F172A", marginBottom: 10 }}>Abonament Expirat</div>
-        <div style={{ fontSize: 14, color: "#64748B", lineHeight: 1.8, marginBottom: 28 }}>Abonamentul <strong>{currentBroker.company_name}</strong> a expirat.</div>
+        <div style={{ fontSize: 14, color: "#64748B", lineHeight: 1.8, marginBottom: 28 }}>Abonamentul <strong>{currentBroker.company_name}</strong> a expirat sau a fost suspendat.</div>
         <button onClick={() => { setCurrentBroker(null); setView("client"); }} style={{ background: "none", border: "1px solid #E2E8F0", color: "#94A3B8", borderRadius: 10, padding: "10px 24px", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Inapoi</button>
       </div>
     </div>
