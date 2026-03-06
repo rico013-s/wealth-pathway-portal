@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { MessageSquare, HelpCircle, BarChart3, Bell, Bot, LayoutDashboard, Users, Calendar, Download, Shield, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,10 +27,20 @@ const SalesFlow = () => {
       return;
     }
     setSubmitting(true);
-    // Simulate submission
-    await new Promise((r) => setTimeout(r, 1500));
-    toast({ title: "Mulțumim!", description: "Te vom contacta în maxim 4 ore." });
-    setFormData({ name: "", company: "", email: "", phone: "", platform: "", message: "" });
+    const { error } = await supabase.from('demo_requests').insert({
+      name: formData.name,
+      company: formData.company,
+      email: formData.email,
+      phone: formData.phone || null,
+      platform: formData.platform || null,
+      message: formData.message || null,
+    });
+    if (error) {
+      toast({ title: "Eroare la trimitere", description: "Te rugăm să încerci din nou.", variant: "destructive" });
+    } else {
+      toast({ title: "Mulțumim!", description: "Te vom contacta în maxim 4 ore." });
+      setFormData({ name: "", company: "", email: "", phone: "", platform: "", message: "" });
+    }
     setSubmitting(false);
   };
 
@@ -234,7 +245,7 @@ const SalesFlow = () => {
             style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.4)" }}
           />
           <p className="text-gray-500 text-sm mt-6">
-            Acesta este un demo live. Datele introduse nu sunt salvate.
+            Acesta este un demo live al chatbot-ului SalesFlow AI.
           </p>
         </div>
       </section>
