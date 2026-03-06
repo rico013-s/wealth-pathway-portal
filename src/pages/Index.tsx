@@ -41,10 +41,10 @@ const mainServices = [
 ];
 
 const highlights = [
-  '15+ Companii Partenere Verificate',
-  '5,000+ Clienți Mulțumiți',
   'Educație pentru Toate Nivelurile',
   'Consultanță Gratuită Inițială',
+  'Mentoring cu Traderi Profesioniști',
+  'Acces la Comunitatea Markets4all',
 ];
 
 const Index = () => {

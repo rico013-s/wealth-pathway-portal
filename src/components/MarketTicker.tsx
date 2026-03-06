@@ -19,10 +19,10 @@ const MarketTicker: React.FC = () => {
         { proName: "FX_IDC:EURUSD", title: "EUR/USD" },
         { proName: "BITSTAMP:BTCUSD", title: "Bitcoin" },
         { proName: "BITSTAMP:ETHUSD", title: "Ethereum" },
-        { proName: "COMEX:GC1!", title: "Gold" },
-        { proName: "NYMEX:CL1!", title: "Crude Oil" },
+        { proName: "TVC:GOLD", title: "Gold" },
+        { proName: "TVC:USOIL", title: "Crude Oil" },
         { proName: "FX_IDC:GBPUSD", title: "GBP/USD" },
-        { proName: "TVC:DXY", title: "US Dollar Index" },
+        { proName: "TVC:DXY", title: "Dollar Index" },
         { proName: "NASDAQ:AAPL", title: "Apple" },
         { proName: "NASDAQ:TSLA", title: "Tesla" },
         { proName: "NASDAQ:NVDA", title: "NVIDIA" }
