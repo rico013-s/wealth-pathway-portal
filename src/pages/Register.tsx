@@ -10,6 +10,7 @@ import { ArrowRight, User, Mail, Lock, UserCheck, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { sendLeadNotification } from '@/utils/sendNotification';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -97,6 +98,13 @@ const Register = () => {
         }
         return;
       }
+
+      sendLeadNotification({
+        name: `${firstName} ${lastName}`,
+        email,
+        phone: phone || undefined,
+        source: "Înregistrare cont nou",
+      });
 
       toast("Înregistrare reușită!", {
         description: "Contul tău a fost creat cu succes."

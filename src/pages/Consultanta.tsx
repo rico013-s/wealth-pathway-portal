@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { sendLeadNotification } from '@/utils/sendNotification';
 
 const steps = [
   {
@@ -96,6 +97,14 @@ const Consultanta = () => {
         });
 
       if (error) throw error;
+
+      sendLeadNotification({
+        name: `${form.firstName} ${form.lastName}`,
+        email: form.email,
+        phone: form.phone || undefined,
+        message: form.goals || undefined,
+        source: "Consultanță",
+      });
 
       toast({
         title: "Solicitare trimisă!",

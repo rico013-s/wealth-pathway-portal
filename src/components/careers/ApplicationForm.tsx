@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Phone, FileText, Upload } from "lucide-react";
+import { sendLeadNotification } from "@/utils/sendNotification";
 
 import {
   Form,
@@ -123,6 +124,14 @@ Contactați aplicantul la ${values.email} pentru a solicita CV-ul.
       
       // Store in local storage for your record (can be checked in admin section)
       saveApplicationToLocalStorage(values, fileName);
+
+      sendLeadNotification({
+        name: values.fullName,
+        email: values.email,
+        phone: values.phone || undefined,
+        message: `Experiență: ${values.experience}. Motivație: ${values.motivation}. CV: ${fileName}`,
+        source: "Aplicare Job (Cariere)",
+      });
       
       toast({
         title: "Aplicare trimisă cu succes!",
