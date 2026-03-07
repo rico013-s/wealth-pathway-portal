@@ -39,6 +39,13 @@ const SalesFlow = () => {
     if (error) {
       toast({ title: "Eroare la trimitere", description: "Te rugăm să încerci din nou.", variant: "destructive" });
     } else {
+      sendLeadNotification({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        message: `Companie: ${formData.company}. Platformă: ${formData.platform || 'N/A'}. ${formData.message || ''}`,
+        source: "SalesFlow Demo Request",
+      });
       toast({ title: "Mulțumim!", description: "Te vom contacta în maxim 4 ore." });
       setFormData({ name: "", company: "", email: "", phone: "", platform: "", message: "" });
     }

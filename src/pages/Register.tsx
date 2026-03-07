@@ -99,6 +99,13 @@ const Register = () => {
         return;
       }
 
+      sendLeadNotification({
+        name: `${firstName} ${lastName}`,
+        email,
+        phone: phone || undefined,
+        source: "Înregistrare cont nou",
+      });
+
       toast("Înregistrare reușită!", {
         description: "Contul tău a fost creat cu succes."
       });

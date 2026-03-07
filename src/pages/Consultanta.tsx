@@ -98,6 +98,14 @@ const Consultanta = () => {
 
       if (error) throw error;
 
+      sendLeadNotification({
+        name: `${form.firstName} ${form.lastName}`,
+        email: form.email,
+        phone: form.phone || undefined,
+        message: form.goals || undefined,
+        source: "Consultanță",
+      });
+
       toast({
         title: "Solicitare trimisă!",
         description: "Te vom contacta în curând pentru programarea consultanței."
