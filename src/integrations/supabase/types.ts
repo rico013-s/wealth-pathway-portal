@@ -245,6 +245,39 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          answers: Json | null
+          classification: string
+          created_at: string
+          id: string
+          qualified_at: string
+          resources_viewed: number
+          score: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          classification: string
+          created_at?: string
+          id?: string
+          qualified_at?: string
+          resources_viewed?: number
+          score?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          classification?: string
+          created_at?: string
+          id?: string
+          qualified_at?: string
+          resources_viewed?: number
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
