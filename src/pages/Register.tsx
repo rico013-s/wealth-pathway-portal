@@ -10,6 +10,7 @@ import { ArrowRight, User, Mail, Lock, UserCheck, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { sendLeadNotification } from '@/utils/sendNotification';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
