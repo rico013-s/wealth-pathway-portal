@@ -158,19 +158,8 @@ const Dashboard = () => {
             </Button>
           </div>
 
-          {/* Progress Card */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-lg font-semibold">Progresul tău</h3>
-                  <p className="text-sm text-gray-400">Completează-ți profilul pentru experiență optimă</p>
-                </div>
-                <span className="text-2xl font-bold text-gold-500">{profileProgress}%</span>
-              </div>
-              <Progress value={profileProgress} className="h-2" />
-            </CardContent>
-          </Card>
+          {/* Investor Progress Tracker */}
+          {user && <InvestorProgressTracker userId={user.id} profile={profile} />}
         </div>
 
         {/* Main Grid */}
