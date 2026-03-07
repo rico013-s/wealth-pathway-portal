@@ -1,6 +1,6 @@
 import { corsHeaders } from "../_shared/cors.ts";
 
-const RECIPIENT_EMAIL = "armancristian96@gmail.com";
+const RECIPIENT_EMAIL = "contfals58@gmail.com";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
